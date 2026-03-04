@@ -1,7 +1,16 @@
 const storyEl = document.getElementById('story');
 const choicesEl = document.getElementById('choices');
+const endingBookEl = document.getElementById('endingBook');
+const restartBtn = document.getElementById('restartBtn');
 
-const state = {
+const ENDING_STORAGE_KEY = 'night_clinic_endings_v1';
+
+let story;
+let nodes;
+let currentId;
+let state;
+
+const initState = () => ({
   player_ticket: `${Math.floor(Math.random() * 79) + 11}`,
   registered: false,
   took_ticket: false,
@@ -11,14 +20,7 @@ const state = {
   danger: 0,
   queue_count: 6,
   rules: {}
-};
-
-let story;
-let nodes;
-let currentId;
-
-// 确保网页版本不会出现姓名输入弹窗。
-window.prompt = () => '';
+});
 
 const readVar = (name) => {
   if (name.startsWith('rules.')) {
@@ -76,6 +78,35 @@ const showError = (message) => {
   choicesEl.innerHTML = '';
 };
 
+const loadEndingBook = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ENDING_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const saveEnding = (endingId, endingTitle) => {
+  const book = loadEndingBook();
+  book[endingId] = endingTitle;
+  localStorage.setItem(ENDING_STORAGE_KEY, JSON.stringify(book));
+};
+
+const renderEndingBook = () => {
+  const book = loadEndingBook();
+  const total = (story.nodes || []).filter((n) => n.ending).length;
+  const keys = Object.keys(book);
+  const lines = [`结局收集：<strong>${keys.length}</strong> / ${total}`];
+  if (!keys.length) {
+    lines.push('你还没有记录任何结局。');
+  } else {
+    for (const k of keys) {
+      lines.push(`- ${book[k]}`);
+    }
+  }
+  endingBookEl.innerHTML = lines.join('<br/>');
+};
+
 const render = () => {
   const node = nodes[currentId];
   if (!node) {
@@ -98,9 +129,12 @@ const render = () => {
   }
 
   if (node.ending) {
+    saveEnding(node.id, node.ending_title || node.id);
+    renderEndingBook();
+
     const end = document.createElement('div');
     end.className = 'system-glitch';
-    end.textContent = '--- 结局结束，可刷新重开 ---';
+    end.textContent = '--- 结局结束，可点击“重新开始” ---';
     choicesEl.appendChild(end);
     return;
   }
@@ -128,6 +162,13 @@ const render = () => {
   }
 };
 
+const restartGame = () => {
+  state = initState();
+  currentId = story.start;
+  enterNode(nodes[currentId]);
+  render();
+};
+
 async function boot() {
   try {
     storyEl.textContent = '夜诊大厅正在亮灯...';
@@ -137,11 +178,15 @@ async function boot() {
     }
     story = await response.json();
     nodes = Object.fromEntries((story.nodes || []).map((n) => [n.id, n]));
+    state = initState();
     currentId = story.start;
 
     if (!currentId || !nodes[currentId]) {
       throw new Error('剧情入口节点无效');
     }
+
+    restartBtn.onclick = restartGame;
+    renderEndingBook();
 
     enterNode(nodes[currentId]);
     render();

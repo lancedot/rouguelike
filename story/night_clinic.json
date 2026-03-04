@@ -1,141 +1,143 @@
 {
   "start": "prologue_ticket",
   "ambient": [
-    {"min_danger": 1, "text": "翻页声停了一拍，像在等你呼吸。"},
-    {"min_danger": 2, "text": "广播念到一个号码，尾音像咬住了你的后颈。"},
-    {"min_danger": 3, "text": "风只吹在你左耳，右耳像贴着另一道呼吸。"},
-    {"min_danger": 4, "text": "你低头时，地上影子比人多一个。"}
+    {"min_danger": 1, "text": "翻页声停了一拍，像有人隔着纸页贴近你，专门等你下一次呼吸。"},
+    {"min_danger": 2, "text": "广播念到一个号码，尾音被拉长，像牙齿轻轻咬在你的后颈。"},
+    {"min_danger": 3, "text": "风只吹在你左耳，右耳却像贴着一张潮冷的嘴唇，在重复你没听清的字。"},
+    {"min_danger": 4, "text": "你低头时，地砖上的影子比大厅里的人多一个，而且刚好站在你身后。"}
   ],
   "nodes": [
     {
       "id": "prologue_ticket",
       "text": [
-        "夜里 11:30。",
-        "自动门在你身后合上。",
-        "分诊台没有人，一台吐号机自己吐出一张纸。",
-        "你捡起号码：{{player_ticket}}。"
+        "夜里 11:30，医院自动门在你身后缓慢合拢，橡胶门缝挤出一声很轻的叹气。你站在门内回头看了一眼，玻璃上映着你，却比你慢半拍才眨眼。",
+        "分诊台后面空着，椅背还在轻微晃动，像有人刚刚离开却故意没走远。角落里的吐号机没有亮灯，屏幕是黑的，却在你靠近时自己吐出一张号码纸。",
+        "纸条落到你鞋尖，边缘潮湿，像被谁含过。你捡起它，号码印得很深：{{player_ticket}}。你说不清为什么，握住这张纸的瞬间，手心立刻跟着发凉。"
       ],
       "choices": [
-        {"text": "走进大厅", "next": "entrance"},
-        {"text": "把号码扔掉", "next": "entrance_throw", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "把号码收进口袋，走进大厅", "next": "entrance"},
+        {"text": "把号码扔回机器口", "next": "entrance_throw", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "entrance_throw",
       "text": [
-        "号码落地前又回到你鞋尖，纸面朝上。",
-        "字迹更深了：{{player_ticket}}。"
+        "你把号码纸塞回吐号机的缝隙，纸角却像被什么从里面轻轻顶出来，慢慢弹回你脚边。它落地时没有声音，像一小块湿布。",
+        "你盯着那串数字看了几秒，发现油墨比刚才更黑，边缘像刚刚又印过一次。四周还是没人，只有远处值班灯忽明忽暗，照得地面像在呼吸。",
+        "你弯腰时，背后传来一阵很近的脚步，又在你直起身时立刻停下。你不确定那是回声，还是有人已经站到了你后面。"
       ],
       "choices": [
-        {"text": "弯腰捡起", "next": "entrance"},
-        {"text": "踩住它往前走", "next": "entrance", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "捡起号码，继续往里走", "next": "entrance"},
+        {"text": "踩住号码往前挪一步", "next": "entrance", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "entrance",
       "text": [
-        "大厅比白天窄，灯一盏亮一盏灭。",
-        "一条队伍从吐号机前排到窗口。",
-        "没有人交谈，只有纸页摩擦声。"
+        "急诊大厅比白天窄得多，天花板似乎压低了一截，荧光灯一盏亮一盏灭，把每个人的脸切成断续的明暗。你很难分清哪些是阴影，哪些是表情。",
+        "一条队伍从吐号机前排到窗口，弯过一根柱子再折回来，像一条钉死在地砖缝里的线。队伍里的每个人都朝同一个方向站着，没人交谈，也没人咳嗽。",
+        "空气里有消毒水味，却混着一丝旧纸受潮后的霉味。你握着号码纸，感觉自己的体温在被它慢慢带走。"
       ],
       "choices": [
         {"text": "站到队尾", "next": "queue_intro"},
-        {"text": "先沿墙观察", "next": "observe_hall", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "先沿墙慢慢观察", "next": "observe_hall", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "queue_intro",
       "text": [
-        "你身前有五个人。",
-        "他们都朝着窗口，肩膀一动不动。",
-        "你手里的号码纸有点潮。"
+        "你站进队尾，和前面的人隔着半步距离。那个距离很奇怪，既不像陌生人之间的礼貌，也不像拥挤时的无奈，更像是故意留出的空隙。",
+        "你前面有五个人：一个男人、一个女人、一个穿校服的少年、一个低着头的老人，还有一个背对你的护士。他们的肩膀几乎不动，像被同一根线拎住。",
+        "你听见自己的呼吸在口罩里变得很响，号码纸在掌心被汗浸软，边缘开始卷起。你忽然生出一种念头：这队伍不是在等叫号，而是在等谁补上某个位置。"
       ],
       "choices": [
-        {"text": "跟着队伍移动", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
-        {"text": "抬头看灯管", "next": "observe_hall"}
+        {"text": "跟着队伍慢慢移动", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
+        {"text": "抬头去数灯管", "next": "observe_hall"}
       ]
     },
     {
       "id": "observe_hall",
       "text": [
-        "你数了天花板灯管，七根。",
-        "再抬头，变成八根。",
-        "香炉里有灰，却闻不到香味。"
+        "你抬头数灯管，第一遍是七根，第二遍却变成八根，最靠近窗口那根灯管像刚刚才从黑暗里长出来。你眨眼再数，又回到七根。",
+        "墙角立着一只旧香炉，里面有新灰，却没有一丝烟味。香灰表面很平，像被看不见的手反复抹平过，专门等下一次有人靠近。",
+        "你把视线挪回队伍，发现自己离队尾远了半步。没人看你，但你能感觉到某种耐心正从大厅深处往你这边靠近。"
       ],
       "choices": [
-        {"text": "回到队伍", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
-        {"text": "继续数第二遍", "next": "gap_event", "effects": [{"op":"inc","var":"danger","value":1},{"op":"dec","var":"queue_count","value":1}]}
+        {"text": "回到队伍后面", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
+        {"text": "再数一遍灯管确认", "next": "gap_event", "effects": [{"op":"inc","var":"danger","value":1},{"op":"dec","var":"queue_count","value":1}]}
       ]
     },
     {
       "id": "gap_event",
       "text": [
-        "穿校服的少年忽然被带向侧门。",
-        "你前方空出一个位置。",
-        "队伍停住了，没人补上。"
+        "队伍忽然向前滑动半步，穿校服的少年被侧门里伸出的手轻轻带走。他没有挣扎，也没有回头，像早就知道自己该在这一刻离开。",
+        "少年原本站的位置空了出来，地砖那一块比周围更亮，像被人刚擦过。队伍随即停住，前后的人都没有补位，所有肩膀保持着同样角度。",
+        "你看着那个空位，心里浮出一个非常不合时宜的冲动：只要往前一步，一切就会重新顺畅。这个想法来得太自然，反而让你背后发凉。"
       ],
       "choices": [
-        {"text": "补上空位", "next": "death_replace", "effects": [{"op":"set","var":"filled_gap","value":true},{"op":"set","var":"replaced","value":true},{"op":"inc","var":"danger","value":2}]},
-        {"text": "留在原地", "next": "steps_event"}
+        {"text": "往前补上空位", "next": "death_replace", "effects": [{"op":"set","var":"filled_gap","value":true},{"op":"set","var":"replaced","value":true},{"op":"inc","var":"danger","value":2}]},
+        {"text": "停在原地不动", "next": "steps_event"}
       ]
     },
     {
       "id": "steps_event",
       "text": [
-        "脚步声应该是：哒、哒、哒。",
-        "你前面那双鞋却没有声音，像悬着。"
+        "队伍再次移动时，你本该听见整齐的脚步声：哒、哒、哒。可你前面那双黑鞋贴着地砖滑过去，鞋底没有一点摩擦，像悬在地面上一厘米。",
+        "你盯着那双鞋看，发现它每次前进的距离都刚好一样，像某种被校准过的机械动作。周围人的衣角也几乎不摆动，仿佛空气在他们身边失效了。",
+        "你喉咙发紧，忽然很想后退半步，去找一个还会发出脚步声的人。可一旦退开，你又担心自己会从这条队伍里被看出来。"
       ],
       "choices": [
-        {"text": "继续跟着", "next": "death_wrong_queue", "effects": [{"op":"set","var":"replaced","value":true},{"op":"inc","var":"danger","value":2}]},
-        {"text": "后退一步", "next": "window_event", "effects": [{"op":"dec","var":"queue_count","value":1}]}
+        {"text": "继续跟着无声的人", "next": "death_wrong_queue", "effects": [{"op":"set","var":"replaced","value":true},{"op":"inc","var":"danger","value":2}]},
+        {"text": "后退一步重新对齐", "next": "window_event", "effects": [{"op":"dec","var":"queue_count","value":1}]}
       ]
     },
     {
       "id": "window_event",
       "text": [
-        "两个窗口并排。",
-        "左侧亮灯，牌子写着夜诊，排着三人。",
-        "右侧黑着，玻璃后有模糊的人影。"
+        "你终于来到前排，看见两个并排窗口。左侧亮着灯，红字牌写着“夜诊”，前面排着三个人；右侧黑着灯，玻璃后却有一个模糊的人影一直没动。",
+        "亮灯窗口里的护士低头翻页，纸张翻动的频率稳定得像秒针。黑灯窗口什么都看不清，只有玻璃偶尔映出你手里那张号码纸，像在提醒你它一直在。",
+        "你能感觉到两边都在“等”你，但等待的意味并不一样：一边像流程，一边像邀请。"
       ],
       "choices": [
-        {"text": "排亮灯窗口", "next": "number_call", "effects": [{"op":"inc","var":"danger","value":2}]},
-        {"text": "排黑灯窗口", "next": "number_call"}
+        {"text": "走向亮灯窗口", "next": "number_call", "effects": [{"op":"inc","var":"danger","value":2}]},
+        {"text": "走向黑灯窗口", "next": "number_call"}
       ]
     },
     {
       "id": "number_call",
       "on_enter": [{"op":"inc","var":"danger","value":1}],
       "text": [
-        "你还没看见叫号屏。",
-        "窗口里的人却先开口：",
-        "“{{player_ticket}}，到你了。”"
+        "你还没看见任何叫号屏，窗口里的人却先抬头。她的眼神没有落在你脸上，而是直接落在你手里那张潮湿的号码纸，像在核对一件物品。",
+        "她开口时声音很轻，却准确报出你的号码：“{{player_ticket}}，到你了。”那一瞬间你后背绷紧，因为你确定自己一路都没把号码给任何人看过。",
+        "你喉咙里有个“在”字几乎要滑出来，又被你硬生生压住。你不确定回应会发生什么，不回应又像在违背某种看不见的秩序。"
       ],
       "choices": [
         {"text": "答应并上前", "next": "death_registered", "effects": [{"op":"set","var":"responded_number","value":true},{"op":"set","var":"replaced","value":true}]},
-        {"text": "不作声，盯着她的手", "next": "ticket_swap"}
+        {"text": "不作声，只盯着她的手", "next": "ticket_swap"}
       ]
     },
     {
       "id": "ticket_swap",
       "text": [
-        "老人回头递来一张号码牌：27。",
-        "“我排不动了，换你。”",
-        "他举着纸，手臂像不会酸。"
+        "你刚沉默下来，前面的老人就慢慢转身，把另一张号码牌递到你面前。纸上写着 27，边缘磨得很毛，像被反复捏了很多年。",
+        "老人声音沙哑又平稳：“我排不动了，换你。”他说话时眼睛没有看你，只盯着你手里的号码，像在等待某个交换动作完成。",
+        "他的手臂举得很稳，完全没有颤，仿佛这只手不是因为疲惫才抬不起来，而是因为从一开始就只能保持这个姿势。"
       ],
       "choices": [
-        {"text": "接过号码牌", "next": "death_exchange", "effects": [{"op":"set","var":"took_ticket","value":true},{"op":"set","var":"replaced","value":true}]},
-        {"text": "拒绝，把手藏进口袋", "next": "leave_or_stay", "effects": [{"op":"dec","var":"queue_count","value":1}]}
+        {"text": "伸手接过 27 号牌", "next": "death_exchange", "effects": [{"op":"set","var":"took_ticket","value":true},{"op":"set","var":"replaced","value":true}]},
+        {"text": "拒绝并把手藏进口袋", "next": "leave_or_stay", "effects": [{"op":"dec","var":"queue_count","value":1}]}
       ]
     },
     {
       "id": "leave_or_stay",
       "text": [
-        "门外天色发白。",
-        "你回头时，队伍像比刚才更短。"
+        "你没有接那张牌。老人慢慢把手收回去，像一根被抽回阴影里的木枝。你这才意识到门外天色已经发白，玻璃门上浮出一层薄薄的晨雾。",
+        "你回头看队伍，发现它比刚才短了一截，却没人真正离开你视线。那些背影像被折进了某个你看不到的角度，仍然在大厅里维持秩序。",
+        "你脚跟发麻，心里只剩一个念头：现在走，也许还来得及；再站一会儿，号码纸可能会先替你做决定。"
       ],
       "choices": [
         {
-          "text": "现在离开医院",
+          "text": "趁现在离开医院",
           "next": "ending_hidden",
           "conditions": [
             {"var":"queue_count","op":"equals","value":3},
@@ -145,41 +147,39 @@
           ]
         },
         {"text": "继续排下去", "next": "ending_normal_leave", "effects": [{"op":"inc","var":"danger","value":1}]},
-        {"text": "转身离开", "next": "ending_normal_leave"}
+        {"text": "立刻转身离开", "next": "ending_normal_leave"}
       ]
     },
     {
       "id": "death_replace",
       "text": [
-        "你踩进空位。",
-        "队伍重新流动，前面的人一个个消失。",
-        "窗口里的人翻了一页：",
-        "“{{player_ticket}}，终于轮到你。”"
+        "你还是往前迈了一步，鞋底落在那块更亮的地砖上，像刚好卡进预留的槽位。队伍立刻恢复流动，前面的人一个接一个淡出光线，像被橡皮慢慢擦掉。",
+        "你来不及回头，窗口里的翻页声已经贴着你耳边响起。那人终于抬头，脸在灯光里平得像一张旧照片，没有阴影，也没有真正的眼神。",
+        "她看着你手里的号码纸，嘴角几乎不动：“{{player_ticket}}，终于轮到你。”你这才意识到，你并不是在排队，而是在被排到这里。"
       ],
       "choices": [
         {"text": "抬头看她", "next": "afterlife_desk"},
-        {"text": "低头看号码纸", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "低头确认号码", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "death_wrong_queue",
       "text": [
-        "你跟着无声的鞋底走了三步。",
-        "你才意识到，整条队伍只有你在呼吸。",
-        "他们一起回头，脸像蒙着磨砂玻璃。"
+        "你继续跟着那双无声的鞋走了三步。第一步你听见自己的呼吸，第二步你听见自己的心跳，第三步之后，周围的一切都静得像被棉花塞满。",
+        "你忽然明白，整条队伍里只有你还在发出活人的声音。前面几个人几乎同时回头，脸像隔着磨砂玻璃，轮廓还在，五官却被抹成一层模糊的白。",
+        "他们没有靠近你，只是看着你，像在确认一个放错位置的部件。你觉得喉咙发紧，连吞咽都像是多余的动作。"
       ],
       "choices": [
-        {"text": "闭眼", "next": "afterlife_desk"},
-        {"text": "继续看着他们", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "闭上眼睛", "next": "afterlife_desk"},
+        {"text": "硬着头皮看回去", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "death_registered",
       "text": [
-        "窗口推来一张表。",
-        "编号：{{player_ticket}}",
-        "状态：已接入。",
-        "大厅里的人都不再看你。"
+        "你应了一声，窗口立刻推来一张薄纸，速度快得像她早就把纸边压在指尖。纸面上只有三行字：编号 {{player_ticket}}，状态 已接入，签收栏 空白。",
+        "你盯着“已接入”三个字，胃里像被冰水灌满。大厅里的人同时把视线移开，没有敌意，也没有好奇，像一件流程终于完成，没人再需要确认。",
+        "你突然明白这不是登记，而是归档。你被写进去的不是病历，而是位置。"
       ],
       "choices": [
         {"text": "按下手印", "next": "afterlife_desk"},
@@ -189,53 +189,57 @@
     {
       "id": "death_exchange",
       "text": [
-        "你接过那张牌。",
-        "再低头时，27 变成了 {{player_ticket}}。",
-        "老人已经不在原地。"
+        "你接过 27 号牌，老人松手的瞬间，肩膀明显轻下去，像终于卸下一副看不见的重物。他没道谢，只是往旁边退开半步，让出原本属于他的位置。",
+        "你低头再看，纸上的 27 正在被水渍一样的灰影慢慢覆盖，最后露出一串你再熟悉不过的数字：{{player_ticket}}。两张牌不知何时变成了一张。",
+        "你抬头找老人，他已经站在队伍外侧，脸埋在阴影里，像从来没来过。你这才意识到，交换完成以后，被替下来的也许不是他。"
       ],
       "choices": [
         {"text": "攥紧号码牌", "next": "afterlife_desk"},
-        {"text": "把号码牌丢开", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "把号码牌扔到地上", "next": "afterlife_desk", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "afterlife_desk",
       "text": [
-        "你还站在大厅里，却听不见自己的呼吸。",
-        "窗口递出一张工牌。",
-        "上面写着：分流 {{player_ticket}}。"
+        "你还站在大厅里，位置却已经换了。你听不见自己的呼吸，胸口没有起伏，连握住号码纸的手都不再发抖，像这具身体终于被校准到正确频率。",
+        "窗口里的人把一张工牌推到你面前，塑封面反着冷光，上面写着：分流 {{player_ticket}}。牌背沾着一点潮湿，像刚从谁的掌心揭下来。",
+        "你本能地想后退，脚却只会往门口那边走。你知道下一次自动门打开时，会有另一个人走进来，手里捏着同样潮湿的号码纸。"
       ],
       "choices": [
         {"text": "回到门口等待下一位", "next": "ending_replaced"},
-        {"text": "站在窗口后面", "next": "ending_replaced", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {"text": "站到窗口后面去", "next": "ending_replaced", "effects": [{"op":"inc","var":"danger","value":1}]}
       ]
     },
     {
       "id": "ending_replaced",
       "ending": true,
+      "ending_title": "结局：替位上岗",
       "text": [
-        "自动门再次打开。",
-        "一个陌生人走进来。",
-        "他低头看着手里的纸：{{player_ticket}}。"
+        "自动门再次打开，一个陌生人快步走进来，边走边低头看手里的号码纸。你隔着玻璃看见他嘴唇轻轻动了一下，像在默念那串数字。",
+        "你站在门边，没有人再把你当成访客。你只是把视线落在他掌心，像曾经有人落在你身上一样，耐心、平静、毫无情绪。",
+        "他抬头时，你已经知道下一句该说什么。"
       ],
       "choices": []
     },
     {
       "id": "ending_hidden",
       "ending": true,
+      "ending_title": "结局：天亮前离场",
       "text": [
-        "你离开医院时，天刚亮。",
-        "门口公告栏贴着旧纸，边角都发黑。",
-        "你没停下看完，手心里的号码却一直是湿的。"
+        "你推门离开医院，清晨的冷空气扑在脸上，像把你从一层黏稠的膜里撕出来。街道开始有车声，你却还听见耳边断断续续的翻页声。",
+        "你没有回头，只在走到路口时看见公告栏里夹着一张旧纸，边角发黑，字迹被雨水泡开，像有人反复贴上又撕下。",
+        "你把手伸进口袋，号码纸还在，潮得像刚从嘴里吐出来。"
       ],
       "choices": []
     },
     {
       "id": "ending_normal_leave",
       "ending": true,
+      "ending_title": "结局：带号离开",
       "text": [
-        "你走出大厅，后背发冷。",
-        "街口风一吹，你才发现掌心还攥着那张号码纸。"
+        "你最终还是离开了大厅，脚步越走越快，直到医院招牌被甩到身后。你告诉自己已经没事了，可掌心始终不敢摊开。",
+        "走到街口风口时，你低头看见那张号码纸仍在手里，边缘被你捏出深深折痕，数字却比刚拿到时更黑。",
+        "你忽然分不清自己是走出了医院，还是只是暂时离开了队伍。"
       ],
       "choices": []
     }

@@ -31,12 +31,11 @@ body {
 }
 
 .titlebar h1 { margin: 0; letter-spacing: 0.2em; }
-.titlebar p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
 pre {
   white-space: pre-wrap;
   margin: 0;
-  line-height: 1.9;
+  line-height: 1.95;
   font-size: 17px;
 }
 
@@ -59,8 +58,29 @@ pre {
   transform: translateY(-1px);
 }
 
+.restart {
+  width: 180px;
+  text-align: center;
+}
+
 .system-glitch {
   color: var(--danger);
   font-size: 13px;
   margin-bottom: 8px;
 }
+
+.meta-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ending-book {
+  margin-top: 10px;
+  border-top: 1px dashed #334157;
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.ending-book strong { color: var(--text); }

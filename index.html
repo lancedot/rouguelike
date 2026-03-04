@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>夜诊 - 文字恐怖原型</title>
+    <title>夜诊</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app">
       <header class="titlebar">
         <h1>夜诊</h1>
-        <p>诡异规则识别 / 文本恐怖</p>
       </header>
 
       <section class="panel panel-story">
@@ -19,6 +18,13 @@
 
       <section class="panel panel-choices">
         <div id="choices"></div>
+      </section>
+
+      <section class="panel panel-meta">
+        <div class="meta-row">
+          <button id="restartBtn" class="choice restart">重新开始</button>
+        </div>
+        <div id="endingBook" class="ending-book"></div>
       </section>
     </main>
 
