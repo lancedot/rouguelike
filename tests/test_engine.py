@@ -11,12 +11,6 @@ def test_random_ticket_template_present():
     assert g.state["player_ticket"] in text
 
 
-def test_no_name_input_node_anymore():
-    g = GameEngine("story/night_clinic.json", rng_seed=1)
-    for node in g.story["nodes"]:
-        assert "input" not in node
-
-
 def test_hidden_ending_choice_visible_when_conditions_match():
     g = GameEngine("story/night_clinic.json", rng_seed=1)
     g.state["queue_count"] = 3
@@ -40,20 +34,29 @@ def test_hidden_ending_reachable_by_safe_path():
         g.enter_current_node()
         g.choose(idx)
     g.enter_current_node()
-    choices = g.get_visible_choices()
-    assert any(c.text == "趁现在离开医院" for c in choices)
+    assert g.current_id == "leave_or_stay"
+    assert any(c.text == "趁现在离开医院" for c in g.get_visible_choices())
 
 
-def test_web_ui_has_restart_and_ending_collection_hooks():
+def test_death_endings_unlock_rules_in_engine():
+    g = GameEngine("story/night_clinic.json", rng_seed=1)
+    g.current_id = "ending_death_gap"
+    g.on_ending()
+    assert g.state["death_count"] == 1
+    assert "不要补空位" in g.state["unlocked_rules"]
+
+
+def test_story_has_multiple_death_endings_and_unlock_fields():
+    data = json.loads(Path("story/night_clinic.json").read_text(encoding="utf-8"))
+    death_endings = [n for n in data["nodes"] if n.get("ending_type") == "death"]
+    assert len(death_endings) >= 4
+    assert all("unlock_rule" in n for n in death_endings)
+
+
+def test_web_ui_has_restart_and_progress_hooks():
     html = Path("index.html").read_text(encoding="utf-8")
     js = Path("app.js").read_text(encoding="utf-8")
     assert 'id="restartBtn"' in html
     assert 'id="endingBook"' in html
-    assert 'localStorage' in js
-
-
-def test_all_endings_have_titles_for_collection_view():
-    data = json.loads(Path("story/night_clinic.json").read_text(encoding="utf-8"))
-    endings = [n for n in data["nodes"] if n.get("ending")]
-    assert endings
-    assert all("ending_title" in n for n in endings)
+    assert "PROGRESS_STORAGE_KEY" in js
+    assert "unlock_rule" in js

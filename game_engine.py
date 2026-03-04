@@ -20,7 +20,13 @@ class GameEngine:
         self.story = self._load_story(self.data_path)
         self.nodes = {node["id"]: node for node in self.story["nodes"]}
         self.rng = random.Random(rng_seed)
-        self.state: Dict[str, Any] = {
+        self.state: Dict[str, Any] = {}
+        self.reset_run(keep_progress=False)
+
+    def reset_run(self, keep_progress: bool = True) -> None:
+        death_count = self.state.get("death_count", 0) if keep_progress else 0
+        unlocked_rules = self.state.get("unlocked_rules", []) if keep_progress else []
+        self.state = {
             "player_ticket": str(self.rng.randint(11, 89)),
             "registered": False,
             "took_ticket": False,
@@ -29,6 +35,8 @@ class GameEngine:
             "replaced": False,
             "danger": 0,
             "queue_count": 6,
+            "death_count": death_count,
+            "unlocked_rules": unlocked_rules,
             "rules": {},
         }
         self.current_id = self.story.get("start", "prologue_ticket")
@@ -133,14 +141,30 @@ class GameEngine:
 
     def render_node_text(self) -> str:
         node = self.get_node()
-        text = "\n".join(self._render_template(line) for line in node.get("text", []))
+        lines = [self._render_template(line) for line in node.get("text", [])]
+        if node.get("id") == self.story.get("start"):
+            dc = self.state.get("death_count", 0)
+            if dc == 0:
+                lines.insert(0, "你第一次走进夜诊大厅。")
+            elif dc <= 2:
+                lines.insert(0, "你又一次回到同一条队伍。")
+            else:
+                lines.insert(0, "你已经记不清这是第几次重来。")
         amb = self.ambient_line()
         if amb:
-            text = f"{text}\n\n{amb}"
-        return text
+            lines.extend(["", amb])
+        return "\n".join(lines)
 
     def is_end(self) -> bool:
         return self.get_node().get("ending", False)
+
+    def on_ending(self) -> None:
+        node = self.get_node()
+        if node.get("ending_type") == "death":
+            self.state["death_count"] += 1
+            unlock = node.get("unlock_rule")
+            if unlock and unlock not in self.state["unlocked_rules"]:
+                self.state["unlocked_rules"].append(unlock)
 
 
 def run_cli(data_path: str = "story/night_clinic.json") -> None:
@@ -151,7 +175,16 @@ def run_cli(data_path: str = "story/night_clinic.json") -> None:
         print(game.render_node_text())
 
         if game.is_end():
-            print("\n--- 结局结束 ---")
+            game.on_ending()
+            if game.state["unlocked_rules"]:
+                print("\n你记住的禁忌：")
+                for r in game.state["unlocked_rules"]:
+                    print(f"- {r}")
+            print(f"\n重复排队次数：{game.state['death_count']}")
+            raw = input("\n--- 结局结束，输入 r 重开，其他键退出 ---\n> ").strip().lower()
+            if raw == "r":
+                game.reset_run(keep_progress=True)
+                continue
             break
 
         choices = game.get_visible_choices()

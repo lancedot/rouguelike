@@ -3,14 +3,15 @@ const choicesEl = document.getElementById('choices');
 const endingBookEl = document.getElementById('endingBook');
 const restartBtn = document.getElementById('restartBtn');
 
-const ENDING_STORAGE_KEY = 'night_clinic_endings_v1';
+const ENDING_STORAGE_KEY = 'night_clinic_endings_v2';
+const PROGRESS_STORAGE_KEY = 'night_clinic_progress_v2';
 
 let story;
 let nodes;
 let currentId;
 let state;
 
-const initState = () => ({
+const initState = (progress) => ({
   player_ticket: `${Math.floor(Math.random() * 79) + 11}`,
   registered: false,
   took_ticket: false,
@@ -19,8 +20,33 @@ const initState = () => ({
   replaced: false,
   danger: 0,
   queue_count: 6,
+  death_count: progress.death_count || 0,
+  unlocked_rules: progress.unlocked_rules || [],
+  echo_line: '',
   rules: {}
 });
+
+const loadProgress = () => {
+  try {
+    return JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const saveProgress = (progress) => {
+  localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+};
+
+const updateEchoLine = () => {
+  if (state.death_count <= 0) {
+    state.echo_line = '你第一次站进这座大厅，仍愿意相信这里只是夜间就诊。';
+  } else if (state.death_count <= 2) {
+    state.echo_line = '你又一次站在同一扇门内，路线似曾相识，连灯闪烁的节拍都没变。';
+  } else {
+    state.echo_line = '你已经记不清第几次重回这里。队伍像在等你按固定顺序犯错。';
+  }
+};
 
 const readVar = (name) => {
   if (name.startsWith('rules.')) {
@@ -100,11 +126,34 @@ const renderEndingBook = () => {
   if (!keys.length) {
     lines.push('你还没有记录任何结局。');
   } else {
-    for (const k of keys) {
-      lines.push(`- ${book[k]}`);
-    }
+    for (const k of keys) lines.push(`- ${book[k]}`);
   }
+
+  lines.push('<br/>记住的禁忌：');
+  if (!state.unlocked_rules.length) {
+    lines.push('（尚未想起任何一条）');
+  } else {
+    for (const rule of state.unlocked_rules) lines.push(`- ${rule}`);
+  }
+
+  lines.push(`<br/>重复排队次数：${state.death_count}`);
   endingBookEl.innerHTML = lines.join('<br/>');
+};
+
+const onEndingReached = (node) => {
+  saveEnding(node.id, node.ending_title || node.id);
+
+  if (node.ending_type === 'death') {
+    state.death_count += 1;
+    if (node.unlock_rule && !state.unlocked_rules.includes(node.unlock_rule)) {
+      state.unlocked_rules.push(node.unlock_rule);
+    }
+    saveProgress({ death_count: state.death_count, unlocked_rules: state.unlocked_rules });
+  } else {
+    saveProgress({ death_count: state.death_count, unlocked_rules: state.unlocked_rules });
+  }
+
+  renderEndingBook();
 };
 
 const render = () => {
@@ -115,6 +164,10 @@ const render = () => {
   }
 
   const lines = (node.text || []).map(template);
+  if (node.id === story.start && state.echo_line) {
+    lines.unshift(state.echo_line);
+    lines.unshift('');
+  }
   const amb = ambientLine();
   if (amb) lines.push('', amb);
   storyEl.textContent = lines.join('\n');
@@ -129,12 +182,10 @@ const render = () => {
   }
 
   if (node.ending) {
-    saveEnding(node.id, node.ending_title || node.id);
-    renderEndingBook();
-
+    onEndingReached(node);
     const end = document.createElement('div');
     end.className = 'system-glitch';
-    end.textContent = '--- 结局结束，可点击“重新开始” ---';
+    end.textContent = '--- 结局结束，可点击“重新开始”继续排队 ---';
     choicesEl.appendChild(end);
     return;
   }
@@ -163,9 +214,12 @@ const render = () => {
 };
 
 const restartGame = () => {
-  state = initState();
+  const progress = loadProgress();
+  state = initState(progress);
+  updateEchoLine();
   currentId = story.start;
   enterNode(nodes[currentId]);
+  renderEndingBook();
   render();
 };
 
@@ -173,23 +227,14 @@ async function boot() {
   try {
     storyEl.textContent = '夜诊大厅正在亮灯...';
     const response = await fetch('./story/night_clinic.json', { cache: 'no-store' });
-    if (!response.ok) {
-      throw new Error(`剧情加载失败（HTTP ${response.status}）`);
-    }
+    if (!response.ok) throw new Error(`剧情加载失败（HTTP ${response.status}）`);
+
     story = await response.json();
     nodes = Object.fromEntries((story.nodes || []).map((n) => [n.id, n]));
-    state = initState();
-    currentId = story.start;
-
-    if (!currentId || !nodes[currentId]) {
-      throw new Error('剧情入口节点无效');
-    }
+    if (!story.start || !nodes[story.start]) throw new Error('剧情入口节点无效');
 
     restartBtn.onclick = restartGame;
-    renderEndingBook();
-
-    enterNode(nodes[currentId]);
-    render();
+    restartGame();
   } catch (error) {
     showError(`加载失败：${error.message}`);
   }
