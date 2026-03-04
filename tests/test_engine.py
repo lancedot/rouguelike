@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from game_engine import GameEngine
 
 
@@ -10,8 +12,8 @@ def test_random_ticket_template_present():
 
 def test_no_name_input_node_anymore():
     g = GameEngine("story/night_clinic.json", rng_seed=1)
-    first = g.get_node("prologue_ticket")
-    assert "input" not in first
+    for node in g.story["nodes"]:
+        assert "input" not in node
 
 
 def test_hidden_ending_choice_visible_when_conditions_match():
@@ -41,3 +43,8 @@ def test_hidden_ending_reachable_by_safe_path():
     g.enter_current_node()
     choices = g.get_visible_choices()
     assert any(c.text == "现在离开医院" for c in choices)
+
+
+def test_web_app_has_no_name_input_flow():
+    app_js = Path("app.js").read_text(encoding="utf-8")
+    assert "input" not in app_js

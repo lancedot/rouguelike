@@ -17,6 +17,9 @@ let story;
 let nodes;
 let currentId;
 
+// 确保网页版本不会出现姓名输入弹窗。
+window.prompt = () => '';
+
 const readVar = (name) => {
   if (name.startsWith('rules.')) {
     return state.rules[name.split('.', 2)[1]] ?? false;
@@ -68,9 +71,17 @@ const ambientLine = () => {
 
 const visibleChoices = (node) => (node.choices || []).filter((c) => (c.conditions || []).every(conditionPass));
 
+const showError = (message) => {
+  storyEl.textContent = message;
+  choicesEl.innerHTML = '';
+};
+
 const render = () => {
   const node = nodes[currentId];
-  if (!node) return;
+  if (!node) {
+    showError('场景加载失败：找不到当前节点。请刷新页面。');
+    return;
+  }
 
   const lines = (node.text || []).map(template);
   const amb = ambientLine();
@@ -94,7 +105,16 @@ const render = () => {
     return;
   }
 
-  for (const c of visibleChoices(node)) {
+  const choices = visibleChoices(node);
+  if (!choices.length) {
+    const empty = document.createElement('div');
+    empty.className = 'system-glitch';
+    empty.textContent = '（暂时没有可选行动，请刷新重试）';
+    choicesEl.appendChild(empty);
+    return;
+  }
+
+  for (const c of choices) {
     const btn = document.createElement('button');
     btn.className = 'choice';
     btn.textContent = template(c.text);
@@ -109,11 +129,25 @@ const render = () => {
 };
 
 async function boot() {
-  story = await fetch('./story/night_clinic.json').then((r) => r.json());
-  nodes = Object.fromEntries(story.nodes.map((n) => [n.id, n]));
-  currentId = story.start;
-  enterNode(nodes[currentId]);
-  render();
+  try {
+    storyEl.textContent = '夜诊大厅正在亮灯...';
+    const response = await fetch('./story/night_clinic.json', { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`剧情加载失败（HTTP ${response.status}）`);
+    }
+    story = await response.json();
+    nodes = Object.fromEntries((story.nodes || []).map((n) => [n.id, n]));
+    currentId = story.start;
+
+    if (!currentId || !nodes[currentId]) {
+      throw new Error('剧情入口节点无效');
+    }
+
+    enterNode(nodes[currentId]);
+    render();
+  } catch (error) {
+    showError(`加载失败：${error.message}`);
+  }
 }
 
 boot();
