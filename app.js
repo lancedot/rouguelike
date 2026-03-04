@@ -133,7 +133,7 @@ const render = () => {
 };
 
 async function boot() {
-  story = await fetch('../story/night_clinic.json').then((r) => r.json());
+  story = await fetch('./story/night_clinic.json').then((r) => r.json());
   nodes = Object.fromEntries(story.nodes.map((n) => [n.id, n]));
   currentId = story.start;
 

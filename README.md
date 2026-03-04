@@ -1,6 +1,6 @@
 # 夜诊（第一版原型）
 
-一个基于 JSON 节点驱动的文字恐怖游戏原型，提供 CLI 与 Web UI 两种游玩方式。
+一个基于 JSON 节点驱动的文字恐怖游戏原型，提供 CLI 与可直接部署到分支根目录的 Web UI。
 
 ## 已实现
 
@@ -28,8 +28,14 @@ python3 game_engine.py
 
 ```bash
 python3 -m http.server 8000
-# 打开 http://localhost:8000/web/
+# 打开 http://localhost:8000/
 ```
+
+
+### Git 分支直接发布（推荐）
+
+- 将本仓库根目录作为静态站点入口（`index.html` 在分支根目录）。
+- 若使用 GitHub Pages，选择从对应分支根目录（`/`）发布即可直接访问。
 
 ## 数据结构
 
