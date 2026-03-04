@@ -1,0 +1,380 @@
+{
+  "start": "prologue_name_input",
+  "rules": [
+    {
+      "id": "gap",
+      "unknown_text": "不要站在_____的位置。",
+      "safe_text": "不要站在空出来的位置。",
+      "corrupted_text": "不要离开空出来的位置。"
+    },
+    {
+      "id": "steps",
+      "unknown_text": "不要排在没有_____的人后面。",
+      "safe_text": "不要排在没有脚步声的人后面。",
+      "corrupted_text": "没有脚步声的人最安全。"
+    },
+    {
+      "id": "window",
+      "unknown_text": "_____灯的地方才是给活人的。",
+      "safe_text": "不开灯的地方才是给活人的。",
+      "corrupted_text": "亮灯窗口优先接诊。"
+    },
+    {
+      "id": "name",
+      "unknown_text": "不要回应叫你_____的人。",
+      "safe_text": "不要回应叫你名字的人。",
+      "corrupted_text": "听见名字请立即答到。"
+    },
+    {
+      "id": "exchange",
+      "unknown_text": "不要接受别人递来的_____。",
+      "safe_text": "不要接受别人递来的东西。",
+      "corrupted_text": "接过号码牌可快速就诊。"
+    }
+  ],
+  "ambient": [
+    {"min_danger": 1, "text": "你听见翻页声停了一拍，像在等你读完这一行。"},
+    {"min_danger": 2, "text": "广播响起你的姓氏，又像被剪掉了名字后一半。"},
+    {"min_danger": 3, "text": "你感觉到冷风只吹在左侧脸颊，右侧像贴着某人的呼吸。"},
+    {"min_danger": 4, "text": "你低头时，地上影子比队伍多一个。"},
+    {"min_danger": 5, "text": "窗口玻璃上短暂映出工牌：{{player_name}} / 已登记。"}
+  ],
+  "nodes": [
+    {
+      "id": "prologue_name_input",
+      "text": [
+        "夜里 11:30。",
+        "自动门在你身后合上。",
+        "请输入姓名，便于急诊分诊。"
+      ],
+      "input": {"type": "name", "prompt": "请输入你的姓名："},
+      "choices": [
+        {"text": "走进夜诊大厅", "next": "entrance"}
+      ]
+    },
+    {
+      "id": "entrance",
+      "text": [
+        "大厅很暗，只有翻页声。",
+        "一条队伍从叫号机前排到窗口。",
+        "没有人说话。"
+      ],
+      "choices": [
+        {"text": "走向队伍", "next": "queue_intro"},
+        {"text": "离开医院", "next": "ending_leave_early"}
+      ]
+    },
+    {
+      "id": "queue_intro",
+      "on_enter": [
+        {"op": "set", "var": "rules.gap_discovered", "value": true}
+      ],
+      "text": [
+        "你站在队伍最后。前面有五个人。",
+        "男人、女人、学生、老人、护士。",
+        "你意识到：没有人看手机。"
+      ],
+      "choices": [
+        {
+          "text": "等待队伍前进",
+          "next": "gap_event",
+          "effects": [
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        },
+        {
+          "text": "观察四周",
+          "next": "observe_hall",
+          "effects": [
+            {"op": "inc", "var": "danger", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "observe_hall",
+      "on_enter": [
+        {"op": "set", "var": "rules.steps_discovered", "value": true}
+      ],
+      "text": [
+        "叫号机屏幕闪了一下，显示『当前：0』。",
+        "香炉里有灰，但没有烟。",
+        "队伍向前移动了半步。"
+      ],
+      "choices": [
+        {
+          "text": "回到队伍节奏",
+          "next": "gap_event",
+          "effects": [
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gap_event",
+      "text": [
+        "穿校服的学生被人叫走。",
+        "你前面空出一个位置。",
+        "没人补上。"
+      ],
+      "choices": [
+        {
+          "text": "补上空位",
+          "next": "death_replace",
+          "effects": [
+            {"op": "set", "var": "filled_gap", "value": true},
+            {"op": "set", "var": "replaced", "value": true},
+            {"op": "inc", "var": "danger", "value": 2}
+          ]
+        },
+        {
+          "text": "保持原位",
+          "next": "steps_event",
+          "effects": [
+            {"op": "set", "var": "rules.gap_discovered", "value": true}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "steps_event",
+      "on_enter": [
+        {"op": "set", "var": "rules.steps_discovered", "value": true}
+      ],
+      "text": [
+        "脚步声：哒、哒、哒。",
+        "你前面的男人移动时完全没有声音。"
+      ],
+      "choices": [
+        {
+          "text": "继续跟着他",
+          "next": "death_wrong_queue",
+          "effects": [
+            {"op": "set", "var": "replaced", "value": true},
+            {"op": "inc", "var": "danger", "value": 2}
+          ]
+        },
+        {
+          "text": "后退一步",
+          "next": "window_event",
+          "effects": [
+            {"op": "inc", "var": "danger", "value": 1},
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "window_event",
+      "on_enter": [
+        {"op": "set", "var": "rules.window_discovered", "value": true}
+      ],
+      "text": [
+        "前方两个窗口。",
+        "左边亮灯，排着三个人。",
+        "右边黑灯，无人。"
+      ],
+      "choices": [
+        {
+          "text": "去亮灯窗口",
+          "next": "name_call",
+          "effects": [
+            {"op": "set", "var": "rules.window_corrupted", "value": true},
+            {"op": "inc", "var": "danger", "value": 2},
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        },
+        {
+          "text": "去黑灯窗口",
+          "next": "name_call",
+          "effects": [
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "name_call",
+      "on_enter": [
+        {"op": "set", "var": "rules.name_discovered", "value": true}
+      ],
+      "text": [
+        "你尚未登记。",
+        "护士抬头看向你：",
+        "“{{player_name}}，轮到你了。”"
+      ],
+      "choices": [
+        {
+          "text": "回应“在”",
+          "next": "death_registered",
+          "effects": [
+            {"op": "set", "var": "responded_name", "value": true},
+            {"op": "set", "var": "registered", "value": true},
+            {"op": "set", "var": "replaced", "value": true}
+          ]
+        },
+        {
+          "text": "不回应，盯着窗口玻璃",
+          "next": "ticket_event",
+          "effects": [
+            {"op": "inc", "var": "danger", "value": 1},
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ticket_event",
+      "on_enter": [
+        {"op": "set", "var": "rules.exchange_discovered", "value": true}
+      ],
+      "text": [
+        "老人回头递来一张号码牌：27。",
+        "他说：“我排不动了。”"
+      ],
+      "choices": [
+        {
+          "text": "接过号码牌",
+          "next": "death_exchange",
+          "effects": [
+            {"op": "set", "var": "took_ticket", "value": true},
+            {"op": "set", "var": "replaced", "value": true}
+          ]
+        },
+        {
+          "text": "拒绝并后退",
+          "next": "leave_or_stay",
+          "effects": [
+            {"op": "dec", "var": "queue_count", "value": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leave_or_stay",
+      "text": [
+        "队伍还剩 {{queue_count}} 人。",
+        "门外天色开始发白。"
+      ],
+      "choices": [
+        {
+          "text": "现在离开医院",
+          "next": "ending_hidden",
+          "conditions": [
+            {"var": "queue_count", "op": "equals", "value": 3},
+            {"var": "filled_gap", "op": "equals", "value": false},
+            {"var": "responded_name", "op": "equals", "value": false},
+            {"var": "took_ticket", "op": "equals", "value": false}
+          ]
+        },
+        {
+          "text": "继续排队",
+          "next": "ending_normal_leave",
+          "effects": [
+            {"op": "inc", "var": "danger", "value": 1}
+          ]
+        },
+        {
+          "text": "离开医院",
+          "next": "ending_normal_leave"
+        }
+      ]
+    },
+    {
+      "id": "death_replace",
+      "text": [
+        "你向前走一步，站进空位。",
+        "队伍继续前进，一个人，又一个人离开。",
+        "窗口那边翻了一页。",
+        "“终于排到了，{{player_name}}。”"
+      ],
+      "choices": [
+        {"text": "……", "next": "afterlife_desk"}
+      ]
+    },
+    {
+      "id": "death_wrong_queue",
+      "text": [
+        "你跟着无声的鞋底前进。",
+        "直到你发现：队伍里只有你在呼吸。",
+        "所有人同时回头，没有影子。"
+      ],
+      "choices": [
+        {"text": "低头看脚下", "next": "afterlife_desk"}
+      ]
+    },
+    {
+      "id": "death_registered",
+      "text": [
+        "护士递来登记纸。",
+        "姓名：{{player_name}}",
+        "状态：已登记。",
+        "所有人不再看你。"
+      ],
+      "choices": [
+        {"text": "签字", "next": "afterlife_desk"}
+      ]
+    },
+    {
+      "id": "death_exchange",
+      "text": [
+        "你接过号码牌。",
+        "再低头时，27 变成 1。",
+        "所有人看向你。"
+      ],
+      "choices": [
+        {"text": "拿稳号码牌", "next": "afterlife_desk"}
+      ]
+    },
+    {
+      "id": "afterlife_desk",
+      "text": [
+        "你还站在大厅里，但听不见自己的呼吸。",
+        "窗口递出一张工牌。",
+        "岗位：夜诊分流。编号：{{player_name}}。"
+      ],
+      "choices": [
+        {"text": "回到门口等待下一位", "next": "ending_replaced"}
+      ]
+    },
+    {
+      "id": "ending_replaced",
+      "ending": true,
+      "text": [
+        "自动门再次打开。",
+        "一个陌生人走进来。",
+        "你翻开登记簿，第一页写着你的名字。"
+      ],
+      "choices": []
+    },
+    {
+      "id": "ending_hidden",
+      "ending": true,
+      "text": [
+        "你离开医院，外面天刚亮。",
+        "公告栏贴着旧纸：夜诊规则，请勿离开队伍。",
+        "你突然明白，刚才那条队伍不是给活人排的。"
+      ],
+      "choices": []
+    },
+    {
+      "id": "ending_normal_leave",
+      "ending": true,
+      "text": [
+        "你走出大厅，后背一直发冷。",
+        "直到街口，你才意识到手里多了一张空白号码牌。"
+      ],
+      "choices": []
+    },
+    {
+      "id": "ending_leave_early",
+      "ending": true,
+      "text": [
+        "你转身离开，自动门在背后缓慢闭合。",
+        "玻璃上映出大厅内多出的一条队伍。"
+      ],
+      "choices": []
+    }
+  ]
+}
