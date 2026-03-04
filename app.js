@@ -1,14 +1,12 @@
 const storyEl = document.getElementById('story');
 const choicesEl = document.getElementById('choices');
-const rulebookEl = document.getElementById('rulebook');
-const metaEl = document.getElementById('meta');
 
 const state = {
-  player_name: '访客',
+  player_ticket: `${Math.floor(Math.random() * 79) + 11}`,
   registered: false,
   took_ticket: false,
   filled_gap: false,
-  responded_name: false,
+  responded_number: false,
   replaced: false,
   danger: 0,
   queue_count: 6,
@@ -68,26 +66,11 @@ const ambientLine = () => {
   return template(pool[Math.floor(Math.random() * pool.length)].text);
 };
 
-const renderRulebook = () => {
-  const lines = ['【夜诊规则页】'];
-  for (const rule of story.rules || []) {
-    const k = rule.id;
-    const discovered = state.rules[`${k}_discovered`] || false;
-    const corrupted = state.rules[`${k}_corrupted`] || false;
-    if (!discovered) lines.push(`- ${rule.unknown_text}`);
-    else if (corrupted) lines.push(`- ${rule.corrupted_text}`);
-    else lines.push(`- ${rule.safe_text}`);
-  }
-  rulebookEl.textContent = lines.join('\n');
-};
-
 const visibleChoices = (node) => (node.choices || []).filter((c) => (c.conditions || []).every(conditionPass));
 
 const render = () => {
   const node = nodes[currentId];
   if (!node) return;
-
-  metaEl.innerHTML = `姓名：<span class="name">${state.player_name}</span>　危险值：<span class="danger">${state.danger}</span>　队伍剩余：${state.queue_count}`;
 
   const lines = (node.text || []).map(template);
   const amb = ambientLine();
@@ -99,7 +82,7 @@ const render = () => {
   if (state.danger >= 3 && Math.random() < 0.2) {
     const glitch = document.createElement('div');
     glitch.className = 'system-glitch';
-    glitch.textContent = '[系统] 返回主菜单 / [系统] 归队';
+    glitch.textContent = '[系统] ...等待叫号...';
     choicesEl.appendChild(glitch);
   }
 
@@ -118,14 +101,7 @@ const render = () => {
     btn.onclick = () => {
       (c.effects || []).forEach(applyEffect);
       currentId = c.next;
-      const nextNode = nodes[currentId];
-      if (nextNode?.input?.type === 'name') {
-        const x = window.prompt(nextNode.input.prompt || '请输入姓名：', state.player_name) || '';
-        const n = x.trim().slice(0, 20) || '访客';
-        state.player_name = n;
-      }
       enterNode(nodes[currentId]);
-      renderRulebook();
       render();
     };
     choicesEl.appendChild(btn);
@@ -136,15 +112,7 @@ async function boot() {
   story = await fetch('./story/night_clinic.json').then((r) => r.json());
   nodes = Object.fromEntries(story.nodes.map((n) => [n.id, n]));
   currentId = story.start;
-
-  const first = nodes[currentId];
-  if (first?.input?.type === 'name') {
-    const x = window.prompt(first.input.prompt || '请输入姓名：', '') || '';
-    state.player_name = x.trim().slice(0, 20) || '访客';
-  }
-
   enterNode(nodes[currentId]);
-  renderRulebook();
   render();
 }
 

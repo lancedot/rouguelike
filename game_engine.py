@@ -19,19 +19,19 @@ class GameEngine:
         self.data_path = Path(data_path)
         self.story = self._load_story(self.data_path)
         self.nodes = {node["id"]: node for node in self.story["nodes"]}
+        self.rng = random.Random(rng_seed)
         self.state: Dict[str, Any] = {
-            "player_name": "访客",
+            "player_ticket": str(self.rng.randint(11, 89)),
             "registered": False,
             "took_ticket": False,
             "filled_gap": False,
-            "responded_name": False,
+            "responded_number": False,
             "replaced": False,
             "danger": 0,
             "queue_count": 6,
             "rules": {},
         }
-        self.current_id = self.story.get("start", "prologue_name_input")
-        self.rng = random.Random(rng_seed)
+        self.current_id = self.story.get("start", "prologue_ticket")
 
     def _load_story(self, path: Path) -> Dict[str, Any]:
         with path.open("r", encoding="utf-8") as f:
@@ -76,9 +76,7 @@ class GameEngine:
         def replace(match: re.Match[str]) -> str:
             key = match.group(1).strip()
             value = self._read_var(key)
-            if value is None:
-                return ""
-            return str(value)
+            return "" if value is None else str(value)
 
         return re.sub(r"\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}", replace, text)
 
@@ -103,11 +101,11 @@ class GameEngine:
 
     def get_visible_choices(self) -> List[Choice]:
         node = self.get_node()
-        result = []
+        visible: List[Choice] = []
         for raw in node.get("choices", []):
             conditions = raw.get("conditions", [])
             if all(self.check_condition(c) for c in conditions):
-                result.append(
+                visible.append(
                     Choice(
                         text=self._render_template(raw["text"]),
                         next=raw["next"],
@@ -115,7 +113,7 @@ class GameEngine:
                         effects=raw.get("effects", []),
                     )
                 )
-        return result
+        return visible
 
     def choose(self, choice_index: int) -> None:
         choices = self.get_visible_choices()
@@ -125,14 +123,6 @@ class GameEngine:
         for effect in choice.effects or []:
             self.apply_effect(effect)
         self.current_id = choice.next
-
-    def input_name(self, value: str) -> None:
-        normalized = value.strip()
-        if not normalized:
-            normalized = "访客"
-        if len(normalized) > 20:
-            normalized = normalized[:20]
-        self.state["player_name"] = normalized
 
     def ambient_line(self) -> str:
         library = self.story.get("ambient", [])
@@ -149,20 +139,6 @@ class GameEngine:
             text = f"{text}\n\n{amb}"
         return text
 
-    def render_rulebook(self) -> str:
-        lines = ["【夜诊规则页】"]
-        for rule in self.story.get("rules", []):
-            key = rule["id"]
-            discovered = self.state["rules"].get(f"{key}_discovered", False)
-            corrupted = self.state["rules"].get(f"{key}_corrupted", False)
-            if not discovered:
-                lines.append(f"- {rule['unknown_text']}")
-            elif corrupted:
-                lines.append(f"- {rule['corrupted_text']}")
-            else:
-                lines.append(f"- {rule['safe_text']}")
-        return "\n".join(lines)
-
     def is_end(self) -> bool:
         return self.get_node().get("ending", False)
 
@@ -171,20 +147,8 @@ def run_cli(data_path: str = "story/night_clinic.json") -> None:
     game = GameEngine(data_path)
     while True:
         game.enter_current_node()
-        node = game.get_node()
         print("\n" + "=" * 48)
-
-        if node.get("input", {}).get("type") == "name":
-            prompt = node["input"].get("prompt", "请输入姓名: ")
-            name = input(prompt)
-            game.input_name(name)
-
-        if game.state["danger"] >= 3 and game.rng.random() < 0.25:
-            print("[系统] 返回主菜单")
-            print("[系统] 归队")
-
-        print(game.render_rulebook())
-        print("\n" + game.render_node_text())
+        print(game.render_node_text())
 
         if game.is_end():
             print("\n--- 结局结束 ---")
