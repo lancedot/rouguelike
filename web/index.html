@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>夜诊 - 文字恐怖原型</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="titlebar">
+        <h1>夜诊</h1>
+        <p>诡异规则识别 / 文本恐怖</p>
+      </header>
+
+      <section class="panel panel-rulebook">
+        <h2>夜诊规则页</h2>
+        <pre id="rulebook"></pre>
+      </section>
+
+      <section class="panel panel-story">
+        <div id="meta" class="meta"></div>
+        <pre id="story"></pre>
+      </section>
+
+      <section class="panel panel-choices">
+        <div id="choices"></div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
