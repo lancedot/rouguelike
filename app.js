@@ -16,12 +16,45 @@
     let currentId = null;
     let state = {};
 
+    // 全局错误展示
     window.onerror = function(msg, url, line) {
         if (storyEl) {
             storyEl.innerHTML = `<span style="color:var(--danger)">[系统错误] ${msg}<br>位置: ${line}行</span>`;
         }
     };
 
+    // --- 数据持久化函数 ---
+    function loadProgress() {
+        try {
+            const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch (e) { return {}; }
+    }
+
+    function saveProgress() {
+        try {
+            localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({
+                death_count: state.death_count,
+                unlocked_rules: state.unlocked_rules,
+                fragments: state.fragments
+            }));
+        } catch (e) {}
+    }
+
+    function loadEndingBook() {
+        try {
+            const data = localStorage.getItem(ENDING_STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch (e) { return {}; }
+    }
+
+    function saveEnding(id, title) {
+        const book = loadEndingBook();
+        book[id] = title;
+        localStorage.setItem(ENDING_STORAGE_KEY, JSON.stringify(book));
+    }
+
+    // --- 游戏逻辑函数 ---
     const initState = (progress) => ({
         player_ticket: `${Math.floor(Math.random() * 79) + 11}`,
         danger: 0,
@@ -32,23 +65,6 @@
         echo_line: '',
         rules: {}
     });
-
-    const loadProgress = () => {
-        try {
-            const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
-            return data ? JSON.parse(data) : {};
-        } catch (e) { return {}; }
-    };
-
-    const saveProgress = () => {
-        try {
-            localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({
-                death_count: state.death_count,
-                unlocked_rules: state.unlocked_rules,
-                fragments: state.fragments
-            }));
-        } catch (e) {}
-    };
 
     const readVar = (name) => {
         if (!name) return undefined;
@@ -126,14 +142,10 @@
             sanityIndicator.textContent = `理智: ${Math.floor(state.sanity)}% | 危险度: ${state.danger}`;
         }
 
-        // 处理图片 - 确保路径正确并显示面板
         if (node.image && sceneImage && imagePanel) {
-            // 清除旧滤镜防止叠加导致的黑屏
             sceneImage.style.filter = 'none';
             sceneImage.src = node.image;
             imagePanel.classList.remove('hidden');
-            
-            // 延迟应用滤镜，确保图片已加载
             const blur = Math.min(state.danger, 3);
             const dark = Math.max(0.4, 0.8 - (state.danger * 0.08));
             sceneImage.style.filter = `grayscale(100%) brightness(${dark}) blur(${blur}px)`;
@@ -183,16 +195,13 @@
                 (c.effects || []).forEach(applyEffect);
                 currentId = c.next;
                 
-                // 震动效果改为单次触发，不影响后续操作
                 if (state.danger > 2) {
                     state.sanity = Math.max(0, state.sanity - (state.danger * 1.2));
                     document.body.style.animation = 'none';
-                    // 强制重绘
                     void document.body.offsetWidth; 
                     document.body.style.animation = `shake 0.5s ease-in-out`;
                 }
                 
-                // 低理智滤镜应用在 html 标签上
                 if (state.sanity < 30) {
                     document.documentElement.style.filter = `hue-rotate(${Math.random() * 30}deg) sepia(0.2) contrast(1.1)`;
                 } else {
@@ -213,12 +222,6 @@
         html += `<br>记忆碎片: ${state.fragments.length > 0 ? state.fragments.join('、') : '无'}<br>`;
         html += `轮回次数: ${state.death_count}`;
         endingBookEl.innerHTML = html;
-    };
-
-    const saveEnding = (id, title) => {
-        const book = loadEndingBook();
-        book[id] = title;
-        localStorage.setItem(ENDING_STORAGE_KEY, JSON.stringify(book));
     };
 
     const showError = (msg) => {
