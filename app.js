@@ -7,11 +7,11 @@ const sceneImage = document.getElementById('sceneImage');
 const ambientTextEl = document.getElementById('ambientText');
 const sanityIndicator = document.getElementById('sanityIndicator');
 
-const ENDING_STORAGE_KEY = 'night_clinic_endings_v3';
-const PROGRESS_STORAGE_KEY = 'night_clinic_progress_v3';
+const ENDING_STORAGE_KEY = 'night_clinic_endings_v4';
+const PROGRESS_STORAGE_KEY = 'night_clinic_progress_v4';
 
 let story;
-let nodes;
+let nodes = {};
 let currentId;
 let state;
 
@@ -34,14 +34,20 @@ const initState = (progress) => ({
 
 const loadProgress = () => {
   try {
-    return JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) || '{}');
-  } catch {
+    const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
+    return data ? JSON.parse(data) : { death_count: 0, unlocked_rules: [], fragments: [] };
+  } catch (e) {
+    console.error('Failed to load progress', e);
     return { death_count: 0, unlocked_rules: [], fragments: [] };
   }
 };
 
 const saveProgress = (progress) => {
-  localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+  try {
+    localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+  } catch (e) {
+    console.error('Failed to save progress', e);
+  }
 };
 
 const updateEchoLine = () => {
@@ -59,6 +65,7 @@ const updateEchoLine = () => {
 };
 
 const readVar = (name) => {
+  if (!name) return undefined;
   if (name.startsWith('rules.')) {
     return state.rules[name.split('.', 2)[1]] ?? false;
   }
@@ -74,6 +81,7 @@ const writeVar = (name, value) => {
 };
 
 const applyEffect = (effect) => {
+  if (!effect) return;
   const op = effect.op;
   const varName = effect.var;
   if (op === 'set') writeVar(varName, effect.value);
@@ -83,8 +91,10 @@ const applyEffect = (effect) => {
 };
 
 const conditionPass = (cond) => {
+  if (!cond) return true;
   const left = readVar(cond.var);
-  const right = cond.value;
+  let right = cond.value;
+  
   switch (cond.op || 'equals') {
     case 'equals': return left === right;
     case 'not_equals': return left !== right;
@@ -92,16 +102,23 @@ const conditionPass = (cond) => {
     case 'lte': return left <= right;
     case 'gt': return left > right;
     case 'lt': return left < right;
-    case 'in': return right.includes(left);
+    case 'in': return Array.isArray(right) && right.includes(left);
     default: return false;
   }
 };
 
 const template = (text) => {
-  if (!text) return '';
+  if (!text || typeof text !== 'string') return '';
+  
+  // 1. 处理条件判断 {{if var op val}}...{{else}}...{{endif}}
+  // 注意：这个简单的正则不支持嵌套 if
   let processed = text.replace(/\{\{if\s+([a-zA-Z0-9_.]+)\s+([a-z_]+)\s+([a-zA-Z0-9_.]+)\s*\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{endif\}\}/g, (match, v, op, val, thenPart, elsePart) => {
     const left = readVar(v);
-    const right = isNaN(val) ? val : Number(val);
+    let right;
+    if (val === 'true') right = true;
+    else if (val === 'false') right = false;
+    else right = isNaN(val) ? val : Number(val);
+    
     let pass = false;
     switch (op) {
       case 'equals': pass = left === right; break;
@@ -113,7 +130,12 @@ const template = (text) => {
     }
     return pass ? thenPart : (elsePart || '');
   });
-  return processed.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k) => `${readVar(k) ?? ''}`);
+
+  // 2. 处理变量替换 {{var}}
+  return processed.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k) => {
+    const val = readVar(k);
+    return val !== undefined ? val : '';
+  });
 };
 
 const parseFormatting = (text) => {
@@ -124,19 +146,24 @@ const parseFormatting = (text) => {
 };
 
 const enterNode = (node) => {
+  if (!node) return;
   (node.on_enter || []).forEach(applyEffect);
+  
+  // 导演系统效果
   if (state.danger > 2) {
     state.sanity = Math.max(0, state.sanity - (state.danger * 2));
     document.body.style.animation = `shake ${0.1 * state.danger}s infinite`;
   } else {
     document.body.style.animation = 'none';
   }
+
   const pulseRate = state.danger > 0 ? (2 / state.danger) : 0;
   if (pulseRate > 0) {
     imagePanel.style.animation = `pulse ${pulseRate}s infinite alternate`;
   } else {
     imagePanel.style.animation = 'none';
   }
+
   if (state.sanity < 30) {
     document.documentElement.style.filter = `hue-rotate(${Math.random() * 360}deg) invert(0.1)`;
   } else {
@@ -145,7 +172,8 @@ const enterNode = (node) => {
 };
 
 const ambientLine = () => {
-  const pool = (story.ambient || []).filter((a) => 
+  if (!story || !story.ambient) return '';
+  const pool = story.ambient.filter((a) => 
     state.danger >= (a.min_danger || 0) && 
     state.sanity <= (a.max_sanity || 100)
   );
@@ -155,17 +183,25 @@ const ambientLine = () => {
   return template(pool[Math.floor(Math.random() * pool.length)].text);
 };
 
-const visibleChoices = (node) => (node.choices || []).filter((c) => (c.conditions || []).every(conditionPass));
+const visibleChoices = (node) => {
+  if (!node || !node.choices) return [];
+  return node.choices.filter((c) => {
+    if (!c.conditions) return true;
+    return c.conditions.every(conditionPass);
+  });
+};
 
 const showError = (message) => {
-  storyEl.textContent = message;
+  console.error(message);
+  storyEl.innerHTML = `<span style="color:var(--danger)">${message}</span>`;
   choicesEl.innerHTML = '';
 };
 
 const loadEndingBook = () => {
   try {
-    return JSON.parse(localStorage.getItem(ENDING_STORAGE_KEY) || '{}');
-  } catch {
+    const data = localStorage.getItem(ENDING_STORAGE_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
     return {};
   }
 };
@@ -186,12 +222,14 @@ const renderEndingBook = () => {
   } else {
     for (const k of keys) lines.push(`- ${book[k]}`);
   }
+
   lines.push('<br/>记住的禁忌：');
   if (!state.unlocked_rules || !state.unlocked_rules.length) {
     lines.push('（尚未想起任何一条）');
   } else {
     for (const rule of state.unlocked_rules) lines.push(`- ${rule}`);
   }
+
   lines.push(`<br/>重复排队次数：${state.death_count}`);
   endingBookEl.innerHTML = lines.join('<br/>');
 };
@@ -218,10 +256,12 @@ const onEndingReached = (node) => {
 const render = () => {
   const node = nodes[currentId];
   if (!node) {
-    showError('场景加载失败：找不到当前节点。请刷新页面。');
+    showError('场景加载失败：找不到当前节点 ' + currentId);
     return;
   }
-  sanityIndicator.textContent = `理智: ${state.sanity}% | 危险度: ${state.danger}`;
+
+  sanityIndicator.textContent = `理智: ${Math.floor(state.sanity)}% | 危险度: ${state.danger}`;
+
   if (node.image) {
     sceneImage.src = node.image;
     imagePanel.classList.remove('hidden');
@@ -231,24 +271,26 @@ const render = () => {
   } else {
     imagePanel.classList.add('hidden');
   }
+
   let rawTextLines = (node.text || []).map(template);
   if (node.id === story.start && state.echo_line) {
     rawTextLines.unshift(state.echo_line);
     rawTextLines.unshift('');
   }
+  
   storyEl.innerHTML = rawTextLines.map(parseFormatting).join('<br/><br/>');
+
   const amb = ambientLine();
   if (amb) {
     ambientTextEl.innerHTML = parseFormatting(amb);
-    if (state.danger >= 3) {
-      ambientTextEl.classList.add('ambient-danger');
-    } else {
-      ambientTextEl.classList.remove('ambient-danger');
-    }
+    if (state.danger >= 3) ambientTextEl.classList.add('ambient-danger');
+    else ambientTextEl.classList.remove('ambient-danger');
   } else {
     ambientTextEl.innerHTML = '';
   }
+
   choicesEl.innerHTML = '';
+
   if (node.ending) {
     onEndingReached(node);
     const end = document.createElement('div');
@@ -257,6 +299,7 @@ const render = () => {
     choicesEl.appendChild(end);
     return;
   }
+
   const choices = visibleChoices(node);
   if (!choices.length) {
     const empty = document.createElement('div');
@@ -265,6 +308,7 @@ const render = () => {
     choicesEl.appendChild(empty);
     return;
   }
+
   for (const c of choices) {
     const btn = document.createElement('button');
     btn.className = 'choice';
@@ -300,17 +344,25 @@ const restartGame = () => {
 
 async function boot() {
   try {
-    storyEl.textContent = '初始化病历...';
+    console.log('Booting game...');
     const response = await fetch('./story/night_clinic.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`剧情加载失败（HTTP ${response.status}）`);
+
     story = await response.json();
-    nodes = Object.fromEntries((story.nodes || []).map((n) => [n.id, n]));
+    // 替代 Object.fromEntries 以提高兼容性
+    nodes = (story.nodes || []).reduce((acc, n) => {
+      acc[n.id] = n;
+      return acc;
+    }, {});
+
     if (!story.start || !nodes[story.start]) throw new Error('剧情入口节点无效');
+
     restartBtn.onclick = restartGame;
     restartGame();
+    console.log('Game booted successfully.');
   } catch (error) {
     showError(`加载失败：${error.message}`);
   }
 }
 
-boot();
+window.onload = boot;
