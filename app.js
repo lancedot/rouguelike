@@ -16,10 +16,9 @@
     let currentId = null;
     let state = {};
 
-    // 全局错误展示
     window.onerror = function(msg, url, line) {
         if (storyEl) {
-            storyEl.innerHTML = `<span style="color:var(--danger)">[程序崩溃] ${msg}<br>位置: ${line}行</span>`;
+            storyEl.innerHTML = `<span style="color:var(--danger)">[系统错误] ${msg}<br>位置: ${line}行</span>`;
         }
     };
 
@@ -92,7 +91,6 @@
 
     const template = (text) => {
         if (!text) return '';
-        // 条件判断 {{if var op val}}...{{endif}}
         let processed = text.replace(/\{\{if\s+([a-zA-Z0-9_.]+)\s+([a-z_]+)\s+([a-zA-Z0-9_.]+)\s*\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{endif\}\}/g, (match, v, op, val, thenPart, elsePart) => {
             const left = readVar(v);
             let right = isNaN(val) ? val : Number(val);
@@ -108,7 +106,6 @@
             else if (op === 'lte') pass = left <= right;
             return pass ? thenPart : (elsePart || '');
         });
-        // 变量替换 {{var}}
         return processed.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k) => readVar(k) ?? '');
     };
 
@@ -125,33 +122,34 @@
             return;
         }
 
-        // 更新理智状态
         if (sanityIndicator) {
             sanityIndicator.textContent = `理智: ${Math.floor(state.sanity)}% | 危险度: ${state.danger}`;
         }
 
-        // 处理图片
+        // 处理图片 - 确保路径正确并显示面板
         if (node.image && sceneImage && imagePanel) {
+            // 清除旧滤镜防止叠加导致的黑屏
+            sceneImage.style.filter = 'none';
             sceneImage.src = node.image;
             imagePanel.classList.remove('hidden');
-            const blur = Math.min(state.danger, 4);
-            const dark = Math.max(0.3, 0.8 - (state.danger * 0.1));
+            
+            // 延迟应用滤镜，确保图片已加载
+            const blur = Math.min(state.danger, 3);
+            const dark = Math.max(0.4, 0.8 - (state.danger * 0.08));
             sceneImage.style.filter = `grayscale(100%) brightness(${dark}) blur(${blur}px)`;
         } else if (imagePanel) {
             imagePanel.classList.add('hidden');
         }
 
-        // 处理文本
         let lines = (node.text || []).map(template);
         if (currentId === story.start && state.echo_line) {
             lines.unshift(state.echo_line, "");
         }
         storyEl.innerHTML = lines.map(parseFormatting).join('<br><br>');
 
-        // 环境文字
         if (ambientTextEl) {
             const ambPool = (story.ambient || []).filter(a => state.danger >= (a.min_danger || 0) && state.sanity <= (a.max_sanity || 100));
-            if (ambPool.length > 0 && Math.random() > 0.5) {
+            if (ambPool.length > 0 && Math.random() > 0.4) {
                 ambientTextEl.innerHTML = parseFormatting(template(ambPool[Math.floor(Math.random() * ambPool.length)].text));
                 ambientTextEl.className = 'ambient-text' + (state.danger >= 3 ? ' ambient-danger' : '');
             } else {
@@ -159,7 +157,6 @@
             }
         }
 
-        // 处理选项
         choicesEl.innerHTML = '';
         if (node.ending) {
             saveEnding(node.id, node.ending_title || node.id);
@@ -185,13 +182,23 @@
             btn.onclick = () => {
                 (c.effects || []).forEach(applyEffect);
                 currentId = c.next;
-                // 导演系统逻辑
+                
+                // 震动效果改为单次触发，不影响后续操作
                 if (state.danger > 2) {
-                    state.sanity = Math.max(0, state.sanity - (state.danger * 1.5));
-                    document.body.style.animation = `shake ${0.1 * state.danger}s infinite`;
-                } else {
+                    state.sanity = Math.max(0, state.sanity - (state.danger * 1.2));
                     document.body.style.animation = 'none';
+                    // 强制重绘
+                    void document.body.offsetWidth; 
+                    document.body.style.animation = `shake 0.5s ease-in-out`;
                 }
+                
+                // 低理智滤镜应用在 html 标签上
+                if (state.sanity < 30) {
+                    document.documentElement.style.filter = `hue-rotate(${Math.random() * 30}deg) sepia(0.2) contrast(1.1)`;
+                } else {
+                    document.documentElement.style.filter = 'none';
+                }
+                
                 render();
             };
             choicesEl.appendChild(btn);
