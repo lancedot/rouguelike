@@ -1,22 +1,57 @@
 {
   "start": "prologue_ticket",
   "ambient": [
-    {"min_danger": 1, "text": "翻页声停在半空，像有人等你把这一行读完。"},
-    {"min_danger": 2, "text": "广播念到一个号码，尾音却像在重复你的呼吸。"},
-    {"min_danger": 3, "text": "你左耳有风，右耳却像贴着另一道体温。"},
-    {"min_danger": 4, "text": "地砖上的影子比大厅里的人多一个，而且正好站在你背后。"}
+    {
+      "min_danger": 0,
+      "max_sanity": 100,
+      "text": "你的呼吸在空旷的大厅里显得过于响亮。"
+    },
+    {
+      "min_danger": 1,
+      "max_sanity": 80,
+      "text": "角落里的盆栽，叶子像是[[干枯的断指|正在微微抽动]]。"
+    },
+    {
+      "min_danger": 2,
+      "max_sanity": 60,
+      "text": "广播里的电流声中，隐约夹杂着~~你的名字~~。"
+    },
+    {
+      "min_danger": 3,
+      "max_sanity": 40,
+      "text": "身后的队伍里，有人在偷偷[[数你的骨头|记录你的死期]]。"
+    },
+    {
+      "min_danger": 4,
+      "max_sanity": 20,
+      "text": "天花板上的灯光闪烁，每一次黑暗都比上一次持续得更久。"
+    }
   ],
   "nodes": [
     {
       "id": "prologue_ticket",
       "text": [
-        "夜里 11:30，自动门在你身后合拢，玻璃上映着你，反光却总慢半拍才动作。分诊台空着，一台黑屏吐号机突然自己运转，吐出一张潮湿的号码纸。你捡起它，号码是 {{player_ticket}}。纸边冰凉，像刚从谁的掌心撕下。",
-        "你明知道不该在这种时刻把自己和这张纸绑定在一起，却还是下意识攥紧了它。"
+        "夜里 11:30。{{if death_count gt 0}}你又一次听到了大门锁死的沉闷声响，像棺盖合拢。{{else}}大门在你身后锁死，声响沉闷如棺盖合拢。{{endif}}吐号机像个病入膏肓的怪兽，吐出一张[[潮湿的纸条|带有余温的皮肤]]。上面的号码是 {{player_ticket}}。",
+        "{{if death_count gte 3}}你甚至能闻到纸条上传来的，属于你自己尸体的味道。{{else}}你感觉到那张纸正在吮吸你指尖的汗水。{{endif}}这里没有医生，只有~~等待收割的庄稼~~。"
       ],
       "choices": [
-        {"text": "把号码收好，走进大厅", "next": "entrance"},
-        {"text": "把号码塞回吐号机", "next": "entrance_throw", "effects": [{"op":"inc","var":"danger","value":1}]}
-      ]
+        {
+          "text": "把号码收好，走进大厅",
+          "next": "entrance"
+        },
+        {
+          "text": "把号码塞回吐号机",
+          "next": "entrance_throw",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "image": "./images/ticket_v2.png"
     },
     {
       "id": "entrance_throw",
@@ -25,20 +60,58 @@
         "你忽然意识到：不是你拿着号码，而是号码在确认你还在。"
       ],
       "choices": [
-        {"text": "捡起号码继续走", "next": "entrance"},
-        {"text": "踩住号码往前挪", "next": "entrance", "effects": [{"op":"inc","var":"danger","value":1}]}
+        {
+          "text": "捡起号码继续走",
+          "next": "entrance"
+        },
+        {
+          "text": "踩住号码往前挪",
+          "next": "entrance",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 1
+            }
+          ]
+        }
       ]
     },
     {
       "id": "entrance",
       "text": [
-        "大厅比白天窄，荧光灯一盏亮一盏灭。队伍从吐号机前一直排到窗口，所有人都朝同一方向站着，安静得像一张被钉在墙上的旧照片。你听见的只有翻页声，规律、克制、没有情绪。",
-        "你把号码捏得更紧，纸边几乎陷进皮肤。"
+        "走廊尽头的黑暗像是凝固的墨水。排队的人群安静得诡异，他们的后脑勺对着你，整齐得像是一排[[石碑|等待刻字的墓碑]]。",
+        "~~你觉得他们还在呼吸吗？~~ 你甚至听不到自己的心跳声。"
       ],
       "choices": [
-        {"text": "站到队尾", "next": "queue_intro"},
-        {"text": "沿墙观察一圈", "next": "observe_hall", "effects": [{"op":"inc","var":"danger","value":1}]}
-      ]
+        {
+          "text": "站到队尾",
+          "next": "queue_intro"
+        },
+        {
+          "text": "沿墙观察一圈",
+          "next": "observe_hall",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "text": "看向走廊尽头那扇从未见过的门",
+          "next": "secret_door",
+          "conditions": [
+            {
+              "var": "sanity",
+              "op": "lte",
+              "value": 40
+            }
+          ]
+        }
+      ],
+      "image": "./images/hallway_v2.png"
     },
     {
       "id": "queue_intro",
@@ -47,8 +120,21 @@
         "你突然有种错觉，自己不是来就诊，而是来补齐某种缺口。"
       ],
       "choices": [
-        {"text": "跟着队伍慢慢移动", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
-        {"text": "抬头数灯管", "next": "observe_hall"}
+        {
+          "text": "跟着队伍慢慢移动",
+          "next": "gap_event",
+          "effects": [
+            {
+              "op": "dec",
+              "var": "queue_count",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "text": "抬头数灯管",
+          "next": "observe_hall"
+        }
       ]
     },
     {
@@ -58,30 +144,94 @@
         "你心里升起一种不安：这个大厅不是在等时间流动，而是在等人犯错。"
       ],
       "choices": [
-        {"text": "回到队尾", "next": "gap_event", "effects": [{"op":"dec","var":"queue_count","value":1}]},
-        {"text": "再确认一次数量", "next": "gap_event", "effects": [{"op":"inc","var":"danger","value":1},{"op":"dec","var":"queue_count","value":1}]}
+        {
+          "text": "回到队尾",
+          "next": "gap_event",
+          "effects": [
+            {
+              "op": "dec",
+              "var": "queue_count",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "text": "再确认一次数量",
+          "next": "gap_event",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 1
+            },
+            {
+              "op": "dec",
+              "var": "queue_count",
+              "value": 1
+            }
+          ]
+        }
       ]
     },
     {
       "id": "gap_event",
       "text": [
-        "穿校服的学生被侧门里伸出的手轻轻带走，前方立刻空出一个位置。队伍停住了，前后的人都没有补位。那一小块地砖比周围更亮，像刚被擦拭过，专门留给谁站上去。",
-        "你脚尖发麻，心里却冒出一个过分自然的念头：只要往前一步，一切会恢复顺畅。"
+        "前方的学生消失了。不是走开，而是像被光线吞噬了一样。队伍中间留下一个[[空位|陷阱]]。",
+        "那个空位散发出一种不可思议的诱惑，仿佛只要站上去，你就能[[补全这个世界|彻底消失]]。"
       ],
       "choices": [
-        {"text": "补上空位", "next": "ending_death_gap", "effects": [{"op":"set","var":"filled_gap","value":true},{"op":"set","var":"replaced","value":true}]},
-        {"text": "保持原位", "next": "steps_event"}
-      ]
+        {
+          "text": "补上空位",
+          "next": "ending_death_gap",
+          "effects": [
+            {
+              "op": "set",
+              "var": "filled_gap",
+              "value": true
+            },
+            {
+              "op": "set",
+              "var": "replaced",
+              "value": true
+            }
+          ]
+        },
+        {
+          "text": "保持原位",
+          "next": "steps_event"
+        }
+      ],
+      "image": "./images/gap_v2.png"
     },
     {
       "id": "steps_event",
       "text": [
-        "队伍再动时，脚步声本该是整齐的“哒、哒、哒”。可你前面那双黑鞋没有一点声响，像鞋底悬在地面上一厘米。你盯得越久越不舒服：它每一步的距离都完全一致，像被精确设定过。",
+        "队伍再动时，脚步声本该是整齐的“哒、哒、哒”。可你前面那双[[黑鞋|其实没有脚]]没有一点声响，像鞋底悬在地面上一厘米。你盯得越久越不舒服：它每一步的距离都完全一致，像被精确设定过。",
         "你意识到，继续跟着它，也许会把自己走进错误的队伍。"
       ],
       "choices": [
-        {"text": "继续跟着无声的人", "next": "ending_death_steps", "effects": [{"op":"set","var":"replaced","value":true}]},
-        {"text": "后退半步换位", "next": "window_event", "effects": [{"op":"dec","var":"queue_count","value":1}]}
+        {
+          "text": "继续跟着无声的人",
+          "next": "ending_death_steps",
+          "effects": [
+            {
+              "op": "set",
+              "var": "replaced",
+              "value": true
+            }
+          ]
+        },
+        {
+          "text": "后退半步换位",
+          "next": "window_event",
+          "effects": [
+            {
+              "op": "dec",
+              "var": "queue_count",
+              "value": 1
+            }
+          ]
+        }
       ]
     },
     {
@@ -91,20 +241,57 @@
         "两边都在等你，但你分不清那是服务，还是挑选。"
       ],
       "choices": [
-        {"text": "排亮灯窗口", "next": "number_call", "effects": [{"op":"inc","var":"danger","value":2}]},
-        {"text": "排黑灯窗口", "next": "number_call"}
+        {
+          "text": "排亮灯窗口",
+          "next": "number_call",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "text": "排黑灯窗口",
+          "next": "number_call"
+        }
       ]
     },
     {
       "id": "number_call",
-      "on_enter": [{"op":"inc","var":"danger","value":1}],
+      "on_enter": [
+        {
+          "op": "inc",
+          "var": "danger",
+          "value": 1
+        }
+      ],
       "text": [
         "你还没看见叫号屏，窗口里的人先抬头，直接报出你的号码：“{{player_ticket}}，到你了。”她没有看你脸，只看你手里的纸，像在核对一件早该交付的物品。",
         "“在”字几乎冲到你喉咙口，你忽然不确定，这一声应答会不会把你登记到另一个名单里。"
       ],
       "choices": [
-        {"text": "下意识应答并上前", "next": "ending_death_call", "effects": [{"op":"set","var":"responded_number","value":true},{"op":"set","var":"replaced","value":true}]},
-        {"text": "保持沉默，盯住她的手", "next": "ticket_swap"}
+        {
+          "text": "下意识应答并上前",
+          "next": "ending_death_call",
+          "effects": [
+            {
+              "op": "set",
+              "var": "responded_number",
+              "value": true
+            },
+            {
+              "op": "set",
+              "var": "replaced",
+              "value": true
+            }
+          ]
+        },
+        {
+          "text": "保持沉默，盯住她的手",
+          "next": "ticket_swap"
+        }
       ]
     },
     {
@@ -114,8 +301,33 @@
         "你注意到他并不看你，只看你手里的号码纸，像在确认交换的不是纸，而是位置。"
       ],
       "choices": [
-        {"text": "接过 27 号牌", "next": "ending_death_swap", "effects": [{"op":"set","var":"took_ticket","value":true},{"op":"set","var":"replaced","value":true}]},
-        {"text": "拒绝并后退", "next": "leave_or_stay", "effects": [{"op":"dec","var":"queue_count","value":1}]}
+        {
+          "text": "接过 27 号牌",
+          "next": "ending_death_swap",
+          "effects": [
+            {
+              "op": "set",
+              "var": "took_ticket",
+              "value": true
+            },
+            {
+              "op": "set",
+              "var": "replaced",
+              "value": true
+            }
+          ]
+        },
+        {
+          "text": "拒绝并后退",
+          "next": "leave_or_stay",
+          "effects": [
+            {
+              "op": "dec",
+              "var": "queue_count",
+              "value": 1
+            }
+          ]
+        }
       ]
     },
     {
@@ -129,17 +341,45 @@
           "text": "趁现在离开医院",
           "next": "ending_hidden",
           "conditions": [
-            {"var":"queue_count","op":"equals","value":3},
-            {"var":"filled_gap","op":"equals","value":false},
-            {"var":"responded_number","op":"equals","value":false},
-            {"var":"took_ticket","op":"equals","value":false}
+            {
+              "var": "queue_count",
+              "op": "equals",
+              "value": 3
+            },
+            {
+              "var": "filled_gap",
+              "op": "equals",
+              "value": false
+            },
+            {
+              "var": "responded_number",
+              "op": "equals",
+              "value": false
+            },
+            {
+              "var": "took_ticket",
+              "op": "equals",
+              "value": false
+            }
           ]
         },
-        {"text": "继续排下去", "next": "ending_normal_leave", "effects": [{"op":"inc","var":"danger","value":1}]},
-        {"text": "转身离开", "next": "ending_normal_leave"}
+        {
+          "text": "继续排下去",
+          "next": "ending_normal_leave",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "text": "转身离开",
+          "next": "ending_normal_leave"
+        }
       ]
     },
-
     {
       "id": "ending_death_gap",
       "ending": true,
@@ -149,7 +389,8 @@
       "text": [
         "你迈进空位，队伍立刻恢复流动。前面的人一个个淡出灯下，像被擦掉。窗口里的人翻过一页，第一次抬眼看你：“{{player_ticket}}，终于轮到你。”你突然明白，这个位置从来就不是空着，它一直在等你。"
       ],
-      "choices": []
+      "choices": [],
+      "gain_fragment": "撕裂的布片"
     },
     {
       "id": "ending_death_steps",
@@ -160,7 +401,8 @@
       "text": [
         "你继续跟着那双无声的鞋，走到第三步才意识到：整条队伍里只有你在呼吸。前面的人一起回头，脸像蒙着磨砂玻璃，轮廓还在，五官却被抹平。你站在原地，像被判定为放错位置的部件。"
       ],
-      "choices": []
+      "choices": [],
+      "gain_fragment": "无声的鞋带"
     },
     {
       "id": "ending_death_call",
@@ -171,7 +413,8 @@
       "text": [
         "你应了一声，窗口立刻推来一张纸：编号 {{player_ticket}}，状态 已接入。大厅里的人同时移开视线，像一件流程完成后无人再关心。你这才意识到，这不是叫号，是归档。"
       ],
-      "choices": []
+      "choices": [],
+      "gain_fragment": "枯萎的声带"
     },
     {
       "id": "ending_death_swap",
@@ -184,7 +427,6 @@
       ],
       "choices": []
     },
-
     {
       "id": "ending_hidden",
       "ending": true,
@@ -202,6 +444,54 @@
       "ending_title": "结局：带号离开",
       "text": [
         "你离开大厅，步子越来越快。走到街口时你摊开掌心，号码纸还在，数字比刚拿到时更黑。你说不清自己是走出了医院，还是只是暂时离开了队伍。"
+      ],
+      "choices": []
+    },
+    {
+      "id": "secret_door",
+      "image": "./images/door_v2.png",
+      "text": [
+        "理智正在从你的眼球缝隙中流失。你看到走廊尽头出现了一扇暗红色的门，门缝里塞满了[[带血的纸条|曾经死在这里的你]]。",
+        "那扇门后传来了某种节律性的跳动声，完美契合你的心跳。"
+      ],
+      "choices": [
+        {
+          "text": "推开这扇门",
+          "next": "ending_truth",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "text": "恐惧让你尖叫着逃回队列",
+          "next": "queue_intro",
+          "effects": [
+            {
+              "op": "inc",
+              "var": "danger",
+              "value": 2
+            },
+            {
+              "op": "dec",
+              "var": "sanity",
+              "value": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ending_truth",
+      "ending": true,
+      "ending_type": "truth",
+      "ending_title": "结局：医院的真相",
+      "text": [
+        "门后是一个巨大的、由人体器官组成的培养皿。无数的号码纸在液体中浮沉，每一张都连接着一个正在呼吸的肉块。",
+        "你看到分诊员正在这里采摘“成熟”的号码。你低头看了一眼自己的手，发现它也正在慢慢变成一张薄薄的、带有 {{player_ticket}} 字样的纸。"
       ],
       "choices": []
     }
