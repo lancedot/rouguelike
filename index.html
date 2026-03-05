@@ -12,11 +12,11 @@
       <header class="titlebar">
         <h1>夜诊</h1>
         <div class="status-indicators">
-          <span id="sanityIndicator">理智</span>
+          <span id="sanityIndicator">理智: --% | 危险度: --</span>
         </div>
       </header>
 
-      <!-- 新增：图片展示区 -->
+      <!-- 图片展示区 -->
       <section id="imagePanel" class="panel panel-image hidden">
         <div class="image-wrapper">
           <img id="sceneImage" src="" alt="scene image" />
@@ -26,7 +26,7 @@
 
       <section class="panel panel-story">
         <div id="ambientText" class="ambient-text"></div>
-        <pre id="story"></pre>
+        <div id="story" style="white-space: pre-wrap; line-height: 2.2; font-size: 16px;"></div>
       </section>
 
       <section class="panel panel-choices">
@@ -35,12 +35,13 @@
 
       <section class="panel panel-meta">
         <div class="meta-row">
-          <button id="restartBtn" class="choice restart">重新排队</button>
+          <button id="restartBtn" class="choice restart">重新开始</button>
         </div>
         <div id="endingBook" class="ending-book"></div>
       </section>
     </main>
 
-    <script type="module" src="./app.js"></script>
+    <!-- 脚本移动到 body 底部，确保元素已加载 -->
+    <script src="./app.js"></script>
   </body>
 </html>
