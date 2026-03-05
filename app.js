@@ -27,7 +27,7 @@ const initState = (progress) => ({
   queue_count: 6,
   death_count: progress.death_count || 0,
   unlocked_rules: progress.unlocked_rules || [],
-  fragments: progress.fragments || [], // 新增：记忆碎片
+  fragments: progress.fragments || [],
   echo_line: '',
   rules: {}
 });
@@ -53,7 +53,7 @@ const updateEchoLine = () => {
     state.echo_line = '你已经记不清第几次重回这里。队伍像在等你按固定顺序犯错。';
   }
   
-  if (state.fragments.length > 0) {
+  if (state.fragments && state.fragments.length > 0) {
     state.echo_line += ` 口袋里，${state.fragments.join('、')} 散发着微弱的热量。`;
   }
 };
@@ -90,79 +90,71 @@ const conditionPass = (cond) => {
     case 'not_equals': return left !== right;
     case 'gte': return left >= right;
     case 'lte': return left <= right;
+    case 'gt': return left > right;
+    case 'lt': return left < right;
     case 'in': return right.includes(left);
     default: return false;
-  const template = (text) => {
-    // 处理条件判断 {{if var op val}}...{{else}}...{{endif}}
-    let processed = text.replace(/\{\{if\s+([a-zA-Z0-9_.]+)\s+([a-z_]+)\s+([a-zA-Z0-9_.]+)\s*\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{endif\}\}/g, (match, v, op, val, thenPart, elsePart) => {
-      const left = readVar(v);
-      const right = isNaN(val) ? val : Number(val);
-      let pass = false;
-      switch (op) {
-        case 'equals': pass = left === right; break;
-        case 'not_equals': pass = left !== right; break;
-        case 'gte': pass = left >= right; break;
-        case 'lte': pass = left <= right; break;
-        case 'gt': pass = left > right; break;
-        case 'lt': pass = left < right; break;
-      }
-      return pass ? thenPart : (elsePart || '');
-    });
+  }
+};
 
-    // 处理变量替换 {{var}}
-    return processed.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k) => `${readVar(k) ?? ''}`);
-  };
-
-  // 解析交互式语法 [[表文本|隐藏文本]] 和 ~~划线文本~~
-  const parseFormatting = (text) => {
-    if (!text) return '';
-    // 划线
-    let parsed = text.replace(/~~(.*?)~~/g, '<span class="del-text">$1</span>');
-    // 悬停隐藏
-    parsed = parsed.replace(/\[\[(.*?)\|(.*?)\]\]/g, '<span class="blood-reveal" data-hidden="$2">$1</span>');
-    return parsed;
-  };
-
-  const enterNode = (node) => {
-    (node.on_enter || []).forEach(applyEffect);
-
-    // 导演系统 (Director System): 锯齿波张力控制
-    // 危险度越高，理智掉得越快，且伴随视觉抖动
-    if (state.danger > 2) {
-      state.sanity = Math.max(0, state.sanity - (state.danger * 2));
-      document.body.style.animation = `shake ${0.1 * state.danger}s infinite`;
-    } else {
-      document.body.style.animation = 'none';
+const template = (text) => {
+  if (!text) return '';
+  let processed = text.replace(/\{\{if\s+([a-zA-Z0-9_.]+)\s+([a-z_]+)\s+([a-zA-Z0-9_.]+)\s*\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{endif\}\}/g, (match, v, op, val, thenPart, elsePart) => {
+    const left = readVar(v);
+    const right = isNaN(val) ? val : Number(val);
+    let pass = false;
+    switch (op) {
+      case 'equals': pass = left === right; break;
+      case 'not_equals': pass = left !== right; break;
+      case 'gte': pass = left >= right; break;
+      case 'lte': pass = left <= right; break;
+      case 'gt': pass = left > right; break;
+      case 'lt': pass = left < right; break;
     }
+    return pass ? thenPart : (elsePart || '');
+  });
+  return processed.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k) => `${readVar(k) ?? ''}`);
+};
 
-    // 增加心跳脉动效果，随危险度增强
-    const pulseRate = state.danger > 0 ? (2 / state.danger) : 0;
-    if (pulseRate > 0) {
-      imagePanel.style.animation = `pulse ${pulseRate}s infinite alternate`;
-    } else {
-      imagePanel.style.animation = 'none';
-    }
+const parseFormatting = (text) => {
+  if (!text) return '';
+  let parsed = text.replace(/~~(.*?)~~/g, '<span class="del-text">$1</span>');
+  parsed = parsed.replace(/\[\[(.*?)\|(.*?)\]\]/g, '<span class="blood-reveal" data-hidden="$2">$1</span>');
+  return parsed;
+};
 
-    // 理智值极低时的“精神污染”效果
-    if (state.sanity < 30) {
-      document.documentElement.style.filter = `hue-rotate(${Math.random() * 360}deg) invert(0.1)`;
-    } else {
-      document.documentElement.style.filter = 'none';
-    }
-  };
+const enterNode = (node) => {
+  (node.on_enter || []).forEach(applyEffect);
+  if (state.danger > 2) {
+    state.sanity = Math.max(0, state.sanity - (state.danger * 2));
+    document.body.style.animation = `shake ${0.1 * state.danger}s infinite`;
+  } else {
+    document.body.style.animation = 'none';
+  }
+  const pulseRate = state.danger > 0 ? (2 / state.danger) : 0;
+  if (pulseRate > 0) {
+    imagePanel.style.animation = `pulse ${pulseRate}s infinite alternate`;
+  } else {
+    imagePanel.style.animation = 'none';
+  }
+  if (state.sanity < 30) {
+    document.documentElement.style.filter = `hue-rotate(${Math.random() * 360}deg) invert(0.1)`;
+  } else {
+    document.documentElement.style.filter = 'none';
+  }
+};
+
 const ambientLine = () => {
   const pool = (story.ambient || []).filter((a) => 
     state.danger >= (a.min_danger || 0) && 
     state.sanity <= (a.max_sanity || 100)
   );
   if (!pool.length) return '';
-
-  // 理智越低，环境文字出现概率越高 (Sawtooth Buildup)
   const probability = (100 - state.sanity) / 100 + 0.2;
   if (Math.random() > probability) return '';
-
   return template(pool[Math.floor(Math.random() * pool.length)].text);
 };
+
 const visibleChoices = (node) => (node.choices || []).filter((c) => (c.conditions || []).every(conditionPass));
 
 const showError = (message) => {
@@ -194,33 +186,27 @@ const renderEndingBook = () => {
   } else {
     for (const k of keys) lines.push(`- ${book[k]}`);
   }
-
   lines.push('<br/>记住的禁忌：');
-  if (!state.unlocked_rules.length) {
+  if (!state.unlocked_rules || !state.unlocked_rules.length) {
     lines.push('（尚未想起任何一条）');
   } else {
     for (const rule of state.unlocked_rules) lines.push(`- ${rule}`);
   }
-
   lines.push(`<br/>重复排队次数：${state.death_count}`);
   endingBookEl.innerHTML = lines.join('<br/>');
 };
 
 const onEndingReached = (node) => {
   saveEnding(node.id, node.ending_title || node.id);
-
   if (node.ending_type === 'death') {
     state.death_count += 1;
     if (node.unlock_rule && !state.unlocked_rules.includes(node.unlock_rule)) {
       state.unlocked_rules.push(node.unlock_rule);
     }
   }
-  
-  // 达到特定结局或节点可能获得永久碎片
   if (node.gain_fragment && !state.fragments.includes(node.gain_fragment)) {
     state.fragments.push(node.gain_fragment);
   }
-
   saveProgress({ 
     death_count: state.death_count, 
     unlocked_rules: state.unlocked_rules,
@@ -235,9 +221,7 @@ const render = () => {
     showError('场景加载失败：找不到当前节点。请刷新页面。');
     return;
   }
-
   sanityIndicator.textContent = `理智: ${state.sanity}% | 危险度: ${state.danger}`;
-
   if (node.image) {
     sceneImage.src = node.image;
     imagePanel.classList.remove('hidden');
@@ -247,15 +231,12 @@ const render = () => {
   } else {
     imagePanel.classList.add('hidden');
   }
-
   let rawTextLines = (node.text || []).map(template);
   if (node.id === story.start && state.echo_line) {
     rawTextLines.unshift(state.echo_line);
     rawTextLines.unshift('');
   }
-  
   storyEl.innerHTML = rawTextLines.map(parseFormatting).join('<br/><br/>');
-
   const amb = ambientLine();
   if (amb) {
     ambientTextEl.innerHTML = parseFormatting(amb);
@@ -267,9 +248,7 @@ const render = () => {
   } else {
     ambientTextEl.innerHTML = '';
   }
-
   choicesEl.innerHTML = '';
-
   if (node.ending) {
     onEndingReached(node);
     const end = document.createElement('div');
@@ -278,7 +257,6 @@ const render = () => {
     choicesEl.appendChild(end);
     return;
   }
-
   const choices = visibleChoices(node);
   if (!choices.length) {
     const empty = document.createElement('div');
@@ -287,7 +265,6 @@ const render = () => {
     choicesEl.appendChild(empty);
     return;
   }
-
   for (const c of choices) {
     const btn = document.createElement('button');
     btn.className = 'choice';
@@ -298,7 +275,6 @@ const render = () => {
     btn.onclick = () => {
       storyEl.style.opacity = '0';
       imagePanel.style.opacity = '0';
-      
       setTimeout(() => {
         (c.effects || []).forEach(applyEffect);
         currentId = c.next;
@@ -327,11 +303,9 @@ async function boot() {
     storyEl.textContent = '初始化病历...';
     const response = await fetch('./story/night_clinic.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`剧情加载失败（HTTP ${response.status}）`);
-
     story = await response.json();
     nodes = Object.fromEntries((story.nodes || []).map((n) => [n.id, n]));
     if (!story.start || !nodes[story.start]) throw new Error('剧情入口节点无效');
-
     restartBtn.onclick = restartGame;
     restartGame();
   } catch (error) {
